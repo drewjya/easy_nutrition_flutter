@@ -36,4 +36,5 @@ class CustomColor {
   static const backgroundTextField = Color(0xff2D303E);
   static const borderGreyTextField = Color(0xff393C49);
   static const borderTextField = Color(0xffABBBC2);
+  static const backgroundDetail = Color(0xff403D54);
 }

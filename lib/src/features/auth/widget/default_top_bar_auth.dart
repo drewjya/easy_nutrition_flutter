@@ -1,4 +1,3 @@
-
 import 'package:easy_nutrition/src/src.dart';
 import 'package:flutter/material.dart';
 
@@ -19,7 +18,6 @@ class DefaultTopBarAuth extends StatelessWidget {
         const Text(
           "EasyNutrition",
           style: TextStyle(
-            color: Colors.white,
             fontSize: 20,
             fontWeight: FontWeight.w600,
           ),

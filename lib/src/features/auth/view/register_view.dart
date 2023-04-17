@@ -27,7 +27,13 @@ class RegisterView extends HookConsumerWidget {
               Padding(
                 padding: const EdgeInsets.all(8.0),
                 child: DefaultTopBarAuth(
-                  onTap: () {},
+                  onTap: () {
+                    Navigator.pushReplacement(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const LoginView(),
+                        ));
+                  },
                   labelButton: "Login",
                 ),
               ),
@@ -56,15 +62,19 @@ class RegisterView extends HookConsumerWidget {
                         padding: const EdgeInsets.symmetric(horizontal: 24.0),
                         child: SizedBox(
                           width: min(MediaQuery.of(context).size.width, 360),
-                          height: 50,
+                          height: 30,
                           child: ElevatedButton(
-                            onPressed: () {},
+                            onPressed: () {
+                              Navigator.pushAndRemoveUntil(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) => const HomeView(),
+                                  ),
+                                  (route) => false);
+                            },
                             child: const Center(
                               child: Text(
                                 "Create Account",
-                                style: TextStyle(
-                                  color: Colors.white,
-                                ),
                               ),
                             ),
                           ),

@@ -1,98 +1,29 @@
 // ignore_for_file: public_member_api_docs, sort_constructors_first
+import 'package:easy_nutrition/src/features/recipe/providers/ui/navbar_provider.dart';
 import 'package:easy_nutrition/src/features/recipe/view/pages/home_page.dart';
+import 'package:easy_nutrition/src/features/recipe/view/pages/leaderboard_page.dart';
+import 'package:easy_nutrition/src/features/recipe/view/pages/personal_page.dart';
+import 'package:easy_nutrition/src/features/recipe/view/pages/utilities_page.dart';
+import 'package:easy_nutrition/src/features/recipe/widget/navlink_widget.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 
-import 'package:easy_nutrition/src/core/common/widget/measure_size.dart';
 import 'package:easy_nutrition/src/core/core.dart';
 
 class HomeView extends HookConsumerWidget {
   const HomeView({super.key});
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final selectedIndex = useState(0);
-    final items = [
-      ItemTile(
-        onTap: () {
-          selectedIndex.value = 0;
-        },
-        icon: Icons.home_outlined,
-        isSelected: selectedIndex.value == 0,
-      ),
-      ItemTile(
-          onTap: () {
-            selectedIndex.value = 1;
-          },
-          isSelected: selectedIndex.value == 1,
-          icon: Icons.settings),
-      ItemTile(
-          onTap: () {
-            selectedIndex.value = 2;
-          },
-          isSelected: selectedIndex.value == 2,
-          icon: Icons.people),
-      ItemTile(
-          onTap: () {
-            selectedIndex.value = 3;
-          },
-          isSelected: selectedIndex.value == 3,
-          icon: Icons.bookmark_outline_outlined),
-    ];
+    final selectedIndex = ref.watch(navLinkProviderProvider);
 
-    var remainingItem = items.where((element) {
-      if (selectedIndex.value == 4) {
-        return true;
-      }
-      return element.icon != items[selectedIndex.value].icon;
-    }).toList();
-
-    return Scaffold(
-      backgroundColor: CustomColor.bodyPrimaryColor,
-      body: Row(
-        children: [
-          Container(
-            width: 80,
-            color: CustomColor.primaryBackgroundColor,
-            child: Column(
-              children: [
-                const SizedBox(
-                  height: 30,
-                ),
-                if (selectedIndex.value != 4)
-                  items[selectedIndex.value]
-                else
-                  items[0],
-                const SizedBox(
-                  height: 10,
-                ),
-                remainingItem[0],
-                const SizedBox(
-                  height: 10,
-                ),
-                remainingItem[1],
-                const SizedBox(
-                  height: 10,
-                ),
-                remainingItem[2],
-                const Spacer(),
-                ItemTile(
-                    onTap: () {
-                      selectedIndex.value = 4;
-                    },
-                    isSelected: selectedIndex.value == 4,
-                    icon: Icons.logout_outlined),
-                const SizedBox(
-                  height: 10,
-                ),
-              ],
-            ),
-          ),
-          const Expanded(
-            child: HomePage(),
-          )
-        ],
-      ),
+    return NavLinkWidget(
+      body: [
+        const HomePage(),
+        const UtilitiesPage(),
+        const PersonalPage(),
+        const LeaderboardPage(),
+      ][selectedIndex % 4],
     );
   }
 }
@@ -122,7 +53,10 @@ class ItemTile extends HookWidget {
             height.value = size.height;
           },
           child: InkWell(
-            onTap: onTap,
+            onTap: () {
+              FocusManager.instance.primaryFocus?.unfocus();
+              onTap?.call();
+            },
             onHover: (value) {
               isHovered.value = value;
             },

@@ -1,10 +1,8 @@
 // ignore_for_file: public_member_api_docs, sort_constructors_first
+import 'package:easy_nutrition/src/src.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
-
-import 'package:easy_nutrition/src/core/core.dart';
-import 'package:easy_nutrition/src/core/util/string_util.dart';
 
 class HomePage extends HookConsumerWidget {
   const HomePage({super.key});
@@ -12,103 +10,159 @@ class HomePage extends HookConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final GlobalKey<ScaffoldState> scaffoldKey =
         useMemoized(() => GlobalKey<ScaffoldState>());
-    return Scaffold(
-      backgroundColor: CustomColor.bodyPrimaryColor,
-      endDrawerEnableOpenDragGesture: false,
-      key: scaffoldKey,
-      endDrawer: Drawer(
-        backgroundColor: CustomColor.primaryBackgroundColor,
-        child: ListView(
-          padding: const EdgeInsets.symmetric(horizontal: 16),
-          children: <Widget>[
-            DrawerHeader(
-              padding: EdgeInsets.zero,
-              margin: EdgeInsets.zero,
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Spacer(),
-                  InkWell(
-                      borderRadius: BorderRadius.circular(50),
-                      onTap: () {
-                        Navigator.pop(context);
-                      },
-                      child: const Icon(
-                        Icons.arrow_back_sharp,
-                        color: Colors.white,
-                      )),
-                  const Spacer(),
-                  const Text(
-                    'Java',
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 28,
-                      fontWeight: FontWeight.w600,
+    return GestureDetector(
+      onTap: () {
+        FocusManager.instance.primaryFocus?.unfocus();
+      },
+      child: Scaffold(
+        backgroundColor: CustomColor.bodyPrimaryColor,
+        endDrawerEnableOpenDragGesture: false,
+        key: scaffoldKey,
+        endDrawer: Drawer(
+          backgroundColor: CustomColor.primaryBackgroundColor,
+          child: ListView(
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            children: <Widget>[
+              DrawerHeader(
+                padding: EdgeInsets.zero,
+                margin: EdgeInsets.zero,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Spacer(),
+                    InkWell(
+                        borderRadius: BorderRadius.circular(50),
+                        onTap: () {
+                          Navigator.pop(context);
+                        },
+                        child: const Icon(
+                          Icons.arrow_back_sharp,
+                          color: Colors.white,
+                        )),
+                    const Spacer(),
+                    const Text(
+                      'Java',
+                      style: TextStyle(
+                        fontSize: 28,
+                        fontWeight: FontWeight.w600,
+                      ),
                     ),
+                    const SizedBox(
+                      height: 10,
+                    ),
+                    const Text(
+                      'Java',
+                      style: TextStyle(
+                        color: CustomColor.borderTextField,
+                        fontSize: 14,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    const Padding(
+                      padding: EdgeInsets.symmetric(vertical: 8.0),
+                      child: Divider(
+                        color: CustomColor.borderGreyTextField,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              ...List.generate(
+                  5,
+                  (index) => [
+                        const CardIngredientsDrawer(
+                          imageLink: '',
+                          ingredients: "2 pcs",
+                          name: 'Ayam',
+                        ),
+                        const SizedBox(
+                          height: 5,
+                        ),
+                      ]).expand((element) => element),
+              const SizedBox(
+                height: 12,
+              ),
+              ElevatedButton(
+                onPressed: () {
+                  scaffoldKey.currentState?.closeEndDrawer();
+                  ref.read(detailActivateProvider.notifier).active();
+                  Navigator.push(
+                    context,
+                    PageRouteBuilder(
+                      pageBuilder: (context, animation1, animation2) =>
+                          const DetailRecipeView(),
+                      transitionDuration: Duration.zero,
+                      reverseTransitionDuration: Duration.zero,
+                    ),
+                  );
+                },
+                child: const Padding(
+                  padding: EdgeInsets.all(12.0),
+                  child: Text("Masak Sekarang"),
+                ),
+              ),
+              const SizedBox(
+                height: 12,
+              ),
+            ],
+          ),
+        ),
+        body: Column(
+          children: [
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 24.0),
+              child: Column(
+                children: [
+                  const Padding(
+                    padding: EdgeInsets.symmetric(vertical: 16),
+                    child: HeaderHome(),
+                  ),
+                  const Divider(
+                    color: CustomColor.backgroundTextField,
+                    thickness: 2,
                   ),
                   const SizedBox(
-                    height: 10,
+                    height: 5,
                   ),
-                  const Text(
-                    'Java',
-                    style: TextStyle(
-                      color: CustomColor.borderTextField,
-                      fontSize: 14,
-                      fontWeight: FontWeight.w600,
-                    ),
+                  Row(
+                    children: const [
+                      Text(
+                        "Choose Dishes",
+                        style: TextStyle(fontSize: 20),
+                      ),
+                      Spacer(),
+                      CustomDropdownButton(
+                        label: "Semua Kategori",
+                      ),
+                    ],
                   ),
-                  const Padding(
-                    padding: EdgeInsets.symmetric(vertical: 8.0),
-                    child: Divider(
-                      color: CustomColor.borderGreyTextField,
-                    ),
+                  const SizedBox(
+                    height: 12,
                   ),
                 ],
               ),
             ),
-            const ListTile(
-              contentPadding: EdgeInsets.zero,
-              leading: CircleAvatar(),
-              title: Text(
-                "ss",
-              ),
-            ),
-            const ListTile(
-              contentPadding: EdgeInsets.zero,
-              leading: CircleAvatar(),
-              title: Text(
-                "ss",
-              ),
-            ),
-            const ListTile(
-              contentPadding: EdgeInsets.zero,
-              leading: CircleAvatar(),
-              title: Text(
-                "ss",
-              ),
-            ),
-            const ListTile(
-              contentPadding: EdgeInsets.zero,
-              leading: CircleAvatar(),
-              title: Text(
-                "ss",
-              ),
-            ),
-            const ListTile(
-              contentPadding: EdgeInsets.zero,
-              leading: CircleAvatar(),
-              title: Text(
-                "ss",
-              ),
-            ),
-            const SizedBox(
-              height: 12,
-            ),
-            ElevatedButton(
-              onPressed: () {},
-              child: const Padding(
-                padding: EdgeInsets.all(12.0),
-                child: Text("Masak Sekarang"),
+            Expanded(
+              child: ListView(
+                children: [
+                  const SizedBox(
+                    height: 12,
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 24.0),
+                    child: Center(
+                      child: Wrap(
+                        spacing: 10,
+                        crossAxisAlignment: WrapCrossAlignment.start,
+                        children: List.generate(
+                            10,
+                            (index) => RecipeCard(onTap: () {
+                                  scaffoldKey.currentState?.openEndDrawer();
+                                })),
+                      ),
+                    ),
+                  ),
+                ],
               ),
             ),
             const SizedBox(
@@ -117,57 +171,56 @@ class HomePage extends HookConsumerWidget {
           ],
         ),
       ),
-      body: ListView(
-        children: [
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 24.0),
-            child: Column(
-              children: [
-                const Padding(
-                  padding: EdgeInsets.symmetric(vertical: 16),
-                  child: HeaderHome(),
-                ),
-                const SizedBox(
-                  height: 15,
-                ),
-                const SubheaderWidget(),
-                const SizedBox(
-                  height: 25,
-                ),
-                Row(
-                  children: [
-                    const Text(
-                      "Choose Dishes",
-                      style: TextStyle(color: Colors.white, fontSize: 20),
-                    ),
-                    const Spacer(),
-                    ElevatedButton(
-                        onPressed: () {}, child: const Text("Semua Kategori")),
-                  ],
-                ),
-                const SizedBox(
-                  height: 25,
-                ),
-              ],
-            ),
-          ),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 24.0),
+    );
+  }
+}
+
+class CardIngredientsDrawer extends StatelessWidget {
+  final String name;
+  final String ingredients;
+  final String imageLink;
+  const CardIngredientsDrawer({
+    Key? key,
+    required this.name,
+    required this.ingredients,
+    required this.imageLink,
+  }) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const CircleAvatar(
+          radius: 22,
+          // foregroundImage: NetworkImage(name),
+        ),
+        const SizedBox(
+          width: 6,
+        ),
+        Text(
+          name,
+        ),
+        const Spacer(),
+        Container(
+          height: 44,
+          decoration: BoxDecoration(
+              color: CustomColor.backgroundTextField,
+              border: Border.all(
+                color: CustomColor.borderTextField,
+                width: 0.1,
+              ),
+              borderRadius: BorderRadius.circular(15)),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 20),
             child: Center(
-              child: Wrap(
-                spacing: 10,
-                crossAxisAlignment: WrapCrossAlignment.start,
-                children: List.generate(
-                    10,
-                    (index) => RecipeCard(onTap: () {
-                          print(scaffoldKey.currentState);
-                          scaffoldKey.currentState?.openEndDrawer();
-                        })),
+              child: Text(
+                ingredients,
               ),
             ),
           ),
-        ],
-      ),
+        )
+      ],
     );
   }
 }
@@ -196,42 +249,40 @@ class RecipeCard extends StatelessWidget {
                 color: CustomColor.primaryBackgroundColor,
                 borderRadius: BorderRadius.circular(16),
               ),
-              child: DefaultTextStyle(
-                style: const TextStyle(color: Colors.white),
-                child: Column(
-                  children: [
-                    const SizedBox(
-                      height: 75,
-                    ),
-                    const SizedBox(
-                      height: 50,
-                      child: Center(
-                        child: Text(
-                          "Salted Pasta with mushroom sauce",
-                          maxLines: 2,
-                          textAlign: TextAlign.center,
-                          overflow: TextOverflow.ellipsis,
-                        ),
+              child: Column(
+                children: [
+                  const SizedBox(
+                    height: 75,
+                  ),
+                  const SizedBox(
+                    height: 50,
+                    width: 170,
+                    child: Center(
+                      child: Text(
+                        "Salted Pasta with mushroom sauce",
+                        maxLines: 2,
+                        textAlign: TextAlign.center,
+                        overflow: TextOverflow.ellipsis,
                       ),
                     ),
-                    const SizedBox(
-                      height: 25,
-                      child: Center(
-                        child: Text("data"),
-                      ),
+                  ),
+                  const SizedBox(
+                    height: 25,
+                    child: Center(
+                      child: Text("data"),
                     ),
-                    const Text("data"),
-                    const SizedBox(
-                      height: 16,
-                    ),
-                    ElevatedButton(
-                        onPressed: onTap,
-                        child: const Padding(
-                          padding: EdgeInsets.all(12.0),
-                          child: Center(child: Text("Cook Now")),
-                        )),
-                  ],
-                ),
+                  ),
+                  const Text("data"),
+                  const SizedBox(
+                    height: 16,
+                  ),
+                  ElevatedButton(
+                      onPressed: onTap,
+                      child: const Padding(
+                        padding: EdgeInsets.all(12.0),
+                        child: Center(child: Text("Cook Now")),
+                      )),
+                ],
               ),
             ),
           ),
@@ -257,66 +308,94 @@ class HeaderHome extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return DefaultTextStyle(
-      style: const TextStyle(
-        color: Colors.white,
-      ),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.center,
-        children: [
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const Text(
-                "Pemilihan Resep",
-                style: TextStyle(
-                  fontWeight: FontWeight.w600,
-                  fontSize: 20,
-                ),
-              ),
-              Text(StringUtil.formatDate(DateTime.now())),
-            ],
-          ),
-          const Spacer(),
-          const Expanded(
-              child: TextField(
-            cursorColor: Colors.white,
-            style: TextStyle(color: Colors.white),
-            decoration: InputDecoration(
-              contentPadding: EdgeInsets.symmetric(vertical: 20, horizontal: 8),
-              filled: true,
-              isDense: true,
-              fillColor: CustomColor.backgroundTextField,
-              prefixIcon: Padding(
-                padding: EdgeInsets.symmetric(horizontal: 8.0),
-                child: Icon(
-                  Icons.search,
-                  color: Colors.white,
-                ),
-              ),
-              hintText: "Search for food, coffee, etc..",
-              hintStyle: TextStyle(
-                color: CustomColor.borderTextField,
-              ),
-              prefixIconConstraints: BoxConstraints(),
-              border: OutlineInputBorder(
-                borderSide: BorderSide(
-                  color: CustomColor.borderGreyTextField,
-                ),
-              ),
-              enabledBorder: OutlineInputBorder(
-                borderSide: BorderSide(
-                  color: CustomColor.borderGreyTextField,
-                ),
-              ),
-              focusedBorder: OutlineInputBorder(
-                borderSide: BorderSide(
-                  color: CustomColor.borderGreyTextField,
-                ),
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.center,
+      children: [
+        Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text(
+              "Pemilihan Resep",
+              style: TextStyle(
+                fontWeight: FontWeight.w600,
+                fontSize: 20,
               ),
             ),
-          )),
-        ],
+            Text(StringUtil.formatDate(DateTime.now())),
+          ],
+        ),
+        const Spacer(),
+        Expanded(
+            child: SearchTextField(
+          hintText: "Search for food, coffee, etc..",
+          onTap: () {
+            Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const SearchPage(),
+                ));
+          },
+        )),
+      ],
+    );
+  }
+}
+
+class SearchTextField extends HookWidget {
+  final VoidCallback? onTap;
+  final String? hintText;
+  const SearchTextField({
+    super.key,
+    this.onTap,
+    this.hintText,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final isEnabled = useState(false);
+    return GestureDetector(
+      onTap: () {
+        isEnabled.value = true;
+      },
+      child: TextField(
+        cursorColor: Colors.white,
+        onTap: onTap,
+        autofocus: false,
+        enabled: isEnabled.value,
+        decoration: InputDecoration(
+          contentPadding: const EdgeInsets.all(8),
+          filled: true,
+          isDense: true,
+          fillColor: CustomColor.backgroundTextField,
+          prefixIcon: const Padding(
+            padding: EdgeInsets.symmetric(horizontal: 8.0),
+            child: Icon(
+              Icons.search,
+              color: Colors.white,
+            ),
+          ),
+          hintText: hintText,
+          hintStyle: const TextStyle(
+            color: CustomColor.borderTextField,
+            fontSize: 12,
+          ),
+          prefixIconConstraints: const BoxConstraints(),
+          border: const OutlineInputBorder(
+            borderSide: BorderSide(
+              color: CustomColor.borderGreyTextField,
+            ),
+          ),
+          enabledBorder: const OutlineInputBorder(
+            borderSide: BorderSide(
+              color: CustomColor.borderGreyTextField,
+            ),
+          ),
+          focusedBorder: const OutlineInputBorder(
+            borderSide: BorderSide(
+              color: CustomColor.borderGreyTextField,
+            ),
+          ),
+        ),
       ),
     );
   }
@@ -396,12 +475,13 @@ class SubheaderItem extends StatelessWidget {
       ),
       child: InkWell(
         onTap: onTap,
+        hoverColor: CustomColor.primaryBackgroundColor,
         child: Container(
-          padding: const EdgeInsets.only(bottom: 6, left: 6, right: 6),
+          padding: const EdgeInsets.only(bottom: 6, left: 6, right: 6, top: 6),
           child: Center(
             child: Text(
               value,
-              style: const TextStyle(color: Colors.white, fontSize: 16),
+              style: const TextStyle(fontSize: 16),
             ),
           ),
         ),
