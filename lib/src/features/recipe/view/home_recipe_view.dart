@@ -1,4 +1,5 @@
 // ignore_for_file: public_member_api_docs, sort_constructors_first
+import 'package:easy_nutrition/src/core/core.dart';
 import 'package:easy_nutrition/src/features/recipe/providers/ui/navbar_provider.dart';
 import 'package:easy_nutrition/src/features/recipe/view/pages/home_page.dart';
 import 'package:easy_nutrition/src/features/recipe/view/pages/leaderboard_page.dart';
@@ -8,8 +9,6 @@ import 'package:easy_nutrition/src/features/recipe/widget/navlink_widget.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
-
-import 'package:easy_nutrition/src/core/core.dart';
 
 class HomeView extends HookConsumerWidget {
   const HomeView({super.key});
@@ -66,9 +65,11 @@ class ItemTile extends HookWidget {
                 child: Container(
                   padding: const EdgeInsets.all(8.0),
                   decoration: BoxDecoration(
-                    color: isSelected || isHovered.value
-                        ? CustomColor.bodyPrimaryColor
-                        : null,
+                    color: onTap == null
+                        ? Colors.blueGrey
+                        : isSelected || isHovered.value
+                            ? CustomColor.bodyPrimaryColor
+                            : null,
                     borderRadius: BorderRadius.horizontal(
                         left: const Radius.circular(15),
                         right: isHovered.value
@@ -79,9 +80,11 @@ class ItemTile extends HookWidget {
                     height: 40,
                     width: 40,
                     decoration: BoxDecoration(
-                      color: isSelected || isHovered.value
-                          ? CustomColor.primaryButtonColor
-                          : null,
+                      color: onTap == null
+                          ? Colors.blueGrey
+                          : isSelected || isHovered.value
+                              ? CustomColor.primaryButtonColor
+                              : null,
                       borderRadius: BorderRadius.circular(15),
                     ),
                     child: Center(

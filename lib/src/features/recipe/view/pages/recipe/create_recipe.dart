@@ -1,8 +1,10 @@
 // ignore_for_file: public_member_api_docs, sort_constructors_first
-import 'package:flutter/material.dart';
+import 'dart:developer';
 
 import 'package:easy_nutrition/src/src.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
+import 'package:hooks_riverpod/hooks_riverpod.dart';
 
 class CreateRecipe extends HookWidget {
   const CreateRecipe({Key? key}) : super(key: key);
@@ -11,7 +13,8 @@ class CreateRecipe extends HookWidget {
   Widget build(BuildContext context) {
     final namaController = useTextEditingController();
     final tabController = useTabController(initialLength: 2);
-    final numberStep = useState(1);
+    final numberStep = useState([1]);
+    log("${numberStep.value}");
     return NavLinkWidget(
       body: Container(
         height: MediaQuery.of(context).size.height * 0.9,
@@ -72,15 +75,31 @@ class CreateRecipe extends HookWidget {
                     Expanded(
                         child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
-                      children: const [
+                      children: [
                         Text("Kategori"),
                         SizedBox(
                           height: 4,
                         ),
-                        CustomDropdownButton(
-                          label: "Semua Kategori",
-                          backgroundColor: CustomColor.fillTextField,
-                        ),
+                        Consumer(builder: (context, ref, child) {
+                          final selectedDropdown =
+                              ref.watch(selectedDropdownProvider);
+
+                          String label;
+                          if (selectedDropdown.isEmpty) {
+                            label = "Semua Kategori";
+                          } else {
+                            final count = ((selectedDropdown.length - 1) == 0)
+                                ? ""
+                                : "+${selectedDropdown.length - 1}";
+
+                            label = "${selectedDropdown.first}$count";
+                          }
+
+                          return CustomDropdownButton(
+                            label: label,
+                            backgroundColor: CustomColor.fillTextField,
+                          );
+                        }),
                       ],
                     )),
                   ],
@@ -245,91 +264,100 @@ class CreateRecipe extends HookWidget {
                 Expanded(
                     child: ListView(
                         children: List.generate(
-                            numberStep.value,
+                            numberStep.value.length,
                             (index) => [
-                                  Container(
-                                    height: 120,
-                                    decoration: BoxDecoration(
-                                      color: CustomColor.backgroundDetail,
-                                      borderRadius: BorderRadius.circular(5),
-                                    ),
-                                    padding: const EdgeInsets.symmetric(
-                                        horizontal: 8, vertical: 5),
-                                    child: Row(
-                                      children: [
-                                        Expanded(
-                                          child: Column(
-                                            crossAxisAlignment:
-                                                CrossAxisAlignment.start,
-                                            children: [
-                                              Text(
-                                                "Langkah ${index + 1}",
-                                                style: const TextStyle(
-                                                  fontSize: 16,
-                                                  fontWeight: FontWeight.w600,
+                                  InkWell(
+                                    onTap: () {
+                                      var val = numberStep.value;
+                                      val.removeAt(index);
+                                      numberStep.value = val;
+                                    },
+                                    child: Container(
+                                      height: 120,
+                                      decoration: BoxDecoration(
+                                        color: CustomColor.backgroundDetail,
+                                        borderRadius: BorderRadius.circular(5),
+                                      ),
+                                      padding: const EdgeInsets.symmetric(
+                                          horizontal: 8, vertical: 5),
+                                      child: Row(
+                                        children: [
+                                          Expanded(
+                                            child: Column(
+                                              crossAxisAlignment:
+                                                  CrossAxisAlignment.start,
+                                              children: [
+                                                Text(
+                                                  "Langkah ${numberStep.value[index]}",
+                                                  style: const TextStyle(
+                                                    fontSize: 16,
+                                                    fontWeight: FontWeight.w600,
+                                                  ),
                                                 ),
-                                              ),
-                                              const SizedBox(
-                                                height: 8,
-                                              ),
-                                              const Expanded(
-                                                child: TextField(
-                                                  maxLines: 5,
-                                                  cursorColor: Colors.white,
-                                                  decoration: InputDecoration(
-                                                    hintText:
-                                                        "Penjelasan Langkah 1 ...",
-                                                    contentPadding:
-                                                        EdgeInsets.symmetric(
-                                                            vertical: 8,
-                                                            horizontal: 8),
-                                                    isDense: true,
-                                                    hintStyle: TextStyle(
-                                                      fontSize: 12,
-                                                    ),
-                                                    border: OutlineInputBorder(
-                                                      borderSide: BorderSide(
-                                                        color: Colors.white,
+                                                const SizedBox(
+                                                  height: 8,
+                                                ),
+                                                const Expanded(
+                                                  child: TextField(
+                                                    maxLines: 5,
+                                                    cursorColor: Colors.white,
+                                                    decoration: InputDecoration(
+                                                      hintText:
+                                                          "Penjelasan Langkah 1 ...",
+                                                      contentPadding:
+                                                          EdgeInsets.symmetric(
+                                                              vertical: 8,
+                                                              horizontal: 8),
+                                                      isDense: true,
+                                                      hintStyle: TextStyle(
+                                                        fontSize: 12,
                                                       ),
-                                                    ),
-                                                    enabledBorder:
-                                                        OutlineInputBorder(
-                                                      borderSide: BorderSide(
-                                                        color: Colors.white,
-                                                        width: 0.5,
+                                                      border:
+                                                          OutlineInputBorder(
+                                                        borderSide: BorderSide(
+                                                          color: Colors.white,
+                                                        ),
                                                       ),
-                                                    ),
-                                                    focusedBorder:
-                                                        OutlineInputBorder(
-                                                      borderSide: BorderSide(
-                                                        color: Colors.white,
-                                                        width: 0.5,
+                                                      enabledBorder:
+                                                          OutlineInputBorder(
+                                                        borderSide: BorderSide(
+                                                          color: Colors.white,
+                                                          width: 0.5,
+                                                        ),
+                                                      ),
+                                                      focusedBorder:
+                                                          OutlineInputBorder(
+                                                        borderSide: BorderSide(
+                                                          color: Colors.white,
+                                                          width: 0.5,
+                                                        ),
                                                       ),
                                                     ),
                                                   ),
                                                 ),
-                                              ),
-                                              const SizedBox(
-                                                height: 8,
-                                              ),
-                                            ],
-                                          ),
-                                        ),
-                                        const SizedBox(
-                                          width: 8,
-                                        ),
-                                        Container(
-                                          decoration: BoxDecoration(
-                                            color:
-                                                CustomColor.primaryButtonColor,
-                                            borderRadius: BorderRadius.circular(
-                                              5,
+                                                const SizedBox(
+                                                  height: 8,
+                                                ),
+                                              ],
                                             ),
                                           ),
-                                          height: 80,
-                                          width: 120,
-                                        ),
-                                      ],
+                                          const SizedBox(
+                                            width: 8,
+                                          ),
+                                          Container(
+                                            decoration: BoxDecoration(
+                                              color: CustomColor
+                                                  .primaryButtonColor,
+                                              borderRadius:
+                                                  BorderRadius.circular(
+                                                5,
+                                              ),
+                                            ),
+                                            height: 80,
+                                            width: 120,
+                                          ),
+                                        ],
+                                      ),
                                     ),
                                   ),
                                   const SizedBox(
@@ -340,7 +368,10 @@ class CreateRecipe extends HookWidget {
                   padding: const EdgeInsets.symmetric(horizontal: 20.0),
                   child: ElevatedButton(
                       onPressed: () {
-                        numberStep.value++;
+                        numberStep.value = [
+                          ...(numberStep.value),
+                          (numberStep.value.length + 1)
+                        ];
                       },
                       child: Row(
                         mainAxisAlignment: MainAxisAlignment.center,

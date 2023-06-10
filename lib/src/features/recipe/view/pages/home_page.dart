@@ -143,27 +143,7 @@ class HomePage extends HookConsumerWidget {
               ),
             ),
             Expanded(
-              child: ListView(
-                children: [
-                  const SizedBox(
-                    height: 12,
-                  ),
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 24.0),
-                    child: Center(
-                      child: Wrap(
-                        spacing: 10,
-                        crossAxisAlignment: WrapCrossAlignment.start,
-                        children: List.generate(
-                            10,
-                            (index) => RecipeCard(onTap: () {
-                                  scaffoldKey.currentState?.openEndDrawer();
-                                })),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
+              child: HomeRecipeContent(scaffoldKey: scaffoldKey),
             ),
             const SizedBox(
               height: 12,
@@ -172,6 +152,54 @@ class HomePage extends HookConsumerWidget {
         ),
       ),
     );
+  }
+}
+
+class HomeRecipeContent extends ConsumerWidget {
+  const HomeRecipeContent({
+    super.key,
+    required this.scaffoldKey,
+  });
+
+  final GlobalKey<ScaffoldState> scaffoldKey;
+
+  @override
+  Widget build(BuildContext context, ref) {
+    return ref.watch(recipeProvider).when(
+          data: (data) {
+            return ListView(
+              children: [
+                const SizedBox(
+                  height: 12,
+                ),
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 12.0),
+                  child: Center(
+                    child: Wrap(
+                      spacing: 10,
+                      crossAxisAlignment: WrapCrossAlignment.start,
+                      children: data
+                          .map((current) => RecipeCard(
+                              recipe: current,
+                              onTap: () {
+                                scaffoldKey.currentState?.openEndDrawer();
+                              }))
+                          .toList(),
+                    ),
+                  ),
+                ),
+              ],
+            );
+          },
+          error: (error, stackTrace) {
+            return Center(
+              child: Text("$error"),
+            );
+          },
+          loading: () => const Center(
+            child: CircularProgressIndicator(),
+          ),
+        );
   }
 }
 
@@ -227,9 +255,11 @@ class CardIngredientsDrawer extends StatelessWidget {
 
 class RecipeCard extends StatelessWidget {
   final VoidCallback? onTap;
+  final RecipeModel recipe;
   const RecipeCard({
     Key? key,
     this.onTap,
+    required this.recipe,
   }) : super(key: key);
 
   @override
@@ -254,25 +284,24 @@ class RecipeCard extends StatelessWidget {
                   const SizedBox(
                     height: 75,
                   ),
-                  const SizedBox(
+                  SizedBox(
                     height: 50,
                     width: 170,
                     child: Center(
                       child: Text(
-                        "Salted Pasta with mushroom sauce",
+                        recipe.recipeName,
                         maxLines: 2,
                         textAlign: TextAlign.center,
                         overflow: TextOverflow.ellipsis,
                       ),
                     ),
                   ),
+                  Text("${recipe.timeNeeded} ${recipe.timeFormat}"),
                   const SizedBox(
-                    height: 25,
-                    child: Center(
-                      child: Text("data"),
-                    ),
+                    height: 6,
                   ),
-                  const Text("data"),
+                  ...recipe.ingredientList.take(2).map((e) => Text(
+                      "${e.ingredientId.split("").take(5).join()} ${e.quantity} ${e.unit}")),
                   const SizedBox(
                     height: 16,
                   ),
@@ -292,7 +321,12 @@ class RecipeCard extends StatelessWidget {
               height: 140,
               width: 140,
               decoration: BoxDecoration(
-                  color: Colors.grey, borderRadius: BorderRadius.circular(100)),
+                color: Colors.grey,
+                borderRadius: BorderRadius.circular(100),
+                image: DecorationImage(
+                  image: NetworkImage(recipe.fileUrl),
+                ),
+              ),
             ),
           )
         ],

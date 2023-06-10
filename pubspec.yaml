@@ -42,7 +42,11 @@ dependencies:
   freezed_annotation: ^2.2.0
   riverpod_annotation: ^2.0.2
   dotted_border: ^2.0.0+3
-  flutter_native_splash: ^2.2.19
+  firebase_core: ^2.13.1
+  firebase_database: ^10.2.2
+  cloud_firestore: ^4.8.0
+  uuid: ^3.0.7
+  firebase_auth: ^4.6.2
 
 dev_dependencies:
   flutter_test:
@@ -53,6 +57,7 @@ dev_dependencies:
   # activated in the `analysis_options.yaml` file located at the root of your
   # package. See that file for information about deactivating specific lint
   # rules and activating additional ones.
+  flutter_native_splash: ^2.2.19
   flutter_lints: ^2.0.0
   build_runner: ^2.3.3
   freezed: ^2.3.2
@@ -60,6 +65,10 @@ dev_dependencies:
 
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec
+
+flutter_native_splash:
+  color: "#1F1D2B"
+
 
 # The following section is specific to Flutter packages.
 flutter:

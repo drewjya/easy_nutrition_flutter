@@ -1,11 +1,10 @@
 // ignore_for_file: public_member_api_docs, sort_constructors_first
 import 'dart:math';
 
+import 'package:easy_nutrition/src/src.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
-
-import 'package:easy_nutrition/src/src.dart';
 
 class LoginView extends HookConsumerWidget {
   const LoginView({Key? key}) : super(key: key);
@@ -18,6 +17,19 @@ class LoginView extends HookConsumerWidget {
     if (isMobile) {
       return const SizedBox.shrink();
     }
+    ref.listen(authProvider, (previous, next) {
+      next.maybeWhen(
+        orElse: () {},
+        data: (data) {
+          Navigator.pushAndRemoveUntil(
+              context,
+              MaterialPageRoute(
+                builder: (context) => const HomeView(),
+              ),
+              (route) => false);
+        },
+      );
+    });
     return Scaffold(
       backgroundColor: CustomColor.primaryBackgroundColor,
       body: Form(
@@ -60,12 +72,9 @@ class LoginView extends HookConsumerWidget {
                           height: 30,
                           child: ElevatedButton(
                             onPressed: () {
-                              Navigator.pushAndRemoveUntil(
-                                  context,
-                                  MaterialPageRoute(
-                                    builder: (context) => const HomeView(),
-                                  ),
-                                  (route) => false);
+                              ref.read(authProvider.notifier).login(
+                                  email: usernameController.text,
+                                  password: passwordController.text);
                             },
                             child: const Center(
                               child: Text(

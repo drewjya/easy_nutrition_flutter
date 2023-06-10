@@ -10,9 +10,23 @@ class RegisterView extends HookConsumerWidget {
 
   @override
   Widget build(BuildContext context, ref) {
-    final usernameController = useTextEditingController();
+    final emailController = useTextEditingController();
     final passwordController = useTextEditingController();
     final fullnameController = useTextEditingController();
+
+    ref.listen(authProvider, (previous, next) {
+      next.maybeWhen(
+        orElse: () {},
+        data: (data) {
+          Navigator.pushAndRemoveUntil(
+              context,
+              MaterialPageRoute(
+                builder: (context) => const HomeView(),
+              ),
+              (route) => false);
+        },
+      );
+    });
     final isMobile = Responsive.isMobile(context);
     if (isMobile) {
       return const SizedBox.shrink();
@@ -49,7 +63,7 @@ class RegisterView extends HookConsumerWidget {
                         height: 8,
                       ),
                       AuthTextField(
-                          controller: usernameController, label: "Username"),
+                          controller: emailController, label: "Email"),
                       const SizedBox(
                         height: 8,
                       ),
@@ -65,12 +79,11 @@ class RegisterView extends HookConsumerWidget {
                           height: 30,
                           child: ElevatedButton(
                             onPressed: () {
-                              Navigator.pushAndRemoveUntil(
-                                  context,
-                                  MaterialPageRoute(
-                                    builder: (context) => const HomeView(),
-                                  ),
-                                  (route) => false);
+                              ref.read(authProvider.notifier).createAccount(
+                                    email: emailController.text,
+                                    password: passwordController.text,
+                                    fullName: fullnameController.text,
+                                  );
                             },
                             child: const Center(
                               child: Text(

@@ -1,8 +1,8 @@
 // ignore_for_file: public_member_api_docs, sort_constructors_first
+import 'package:easy_nutrition/src/features/recipe/providers/user_provider.dart';
+import 'package:easy_nutrition/src/src.dart';
 import 'package:flutter/material.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
-
-import 'package:easy_nutrition/src/src.dart';
 
 class NavLinkWidget extends HookConsumerWidget {
   final Widget body;
@@ -92,12 +92,7 @@ class NavLinkWidget extends HookConsumerWidget {
       },
     ];
 
-    var remainingItem = items.where((element) {
-      if (selectedIndex == 4) {
-        return true;
-      }
-      return element['icon'] != items[selectedIndex]['icon'];
-    }).toList();
+    var remainingItem = items;
 
     return GestureDetector(
       onTap: () {
@@ -115,16 +110,6 @@ class NavLinkWidget extends HookConsumerWidget {
                   const SizedBox(
                     height: 30,
                   ),
-                  if (selectedIndex != 4) ...[
-                    ItemTile(
-                      isSelected: items[selectedIndex]['isSelected'],
-                      icon: items[selectedIndex]['icon'],
-                      onTap: items[selectedIndex]['onTap'],
-                    ),
-                    const SizedBox(
-                      height: 10,
-                    ),
-                  ],
                   ...remainingItem
                       .map((e) => [
                             ItemTile(
@@ -139,32 +124,85 @@ class NavLinkWidget extends HookConsumerWidget {
                           ])
                       .expand((element) => element),
                   const Spacer(),
-                  ItemTile(
-                      onTap: () {
-                        if (ref.read(detailActivateProvider)) {
-                          ref.read(detailActivateProvider.notifier).back();
-                          Navigator.pushAndRemoveUntil(
-                              context,
-                              PageRouteBuilder(
-                                pageBuilder:
-                                    (context, animation1, animation2) =>
-                                        const HomeView(),
-                                transitionDuration: Duration.zero,
-                                reverseTransitionDuration: Duration.zero,
-                              ),
-                              (route) => false);
-                        }
-                        ref
-                            .read(navLinkProviderProvider.notifier)
-                            .changeIndex(0);
-                        Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) => const LoginView(),
-                            ));
-                      },
-                      isSelected: selectedIndex == 4,
-                      icon: Icons.logout_outlined),
+                  Consumer(
+                    builder: (context, ref, child) {
+                      final user = ref.watch(currUserProvider);
+
+                      return user.when(
+                          data: (data) {
+                            return data != null
+                                ? const SizedBox()
+                                : ItemTile(
+                                    onTap: () {
+                                      if (ref.read(detailActivateProvider)) {
+                                        ref
+                                            .read(
+                                                detailActivateProvider.notifier)
+                                            .back();
+                                        Navigator.pushAndRemoveUntil(
+                                            context,
+                                            PageRouteBuilder(
+                                              pageBuilder: (context, animation1,
+                                                      animation2) =>
+                                                  const HomeView(),
+                                              transitionDuration: Duration.zero,
+                                              reverseTransitionDuration:
+                                                  Duration.zero,
+                                            ),
+                                            (route) => false);
+                                      }
+                                      ref
+                                          .read(
+                                              navLinkProviderProvider.notifier)
+                                          .changeIndex(0);
+                                      Navigator.push(
+                                          context,
+                                          MaterialPageRoute(
+                                            builder: (context) =>
+                                                const LoginView(),
+                                          ));
+                                    },
+                                    isSelected: selectedIndex == 4,
+                                    icon: Icons.logout_outlined);
+                          },
+                          error: (error, stackTrace) {
+                            return ItemTile(
+                                onTap: () {
+                                  if (ref.read(detailActivateProvider)) {
+                                    ref
+                                        .read(detailActivateProvider.notifier)
+                                        .back();
+                                    Navigator.pushAndRemoveUntil(
+                                        context,
+                                        PageRouteBuilder(
+                                          pageBuilder: (context, animation1,
+                                                  animation2) =>
+                                              const HomeView(),
+                                          transitionDuration: Duration.zero,
+                                          reverseTransitionDuration:
+                                              Duration.zero,
+                                        ),
+                                        (route) => false);
+                                  }
+                                  ref
+                                      .read(navLinkProviderProvider.notifier)
+                                      .changeIndex(0);
+                                  Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder: (context) => const LoginView(),
+                                      ));
+                                },
+                                isSelected: selectedIndex == 4,
+                                icon: Icons.logout_outlined);
+                            
+                          },
+                          loading: () => ItemTile(
+                              onTap: null,
+                              isSelected: selectedIndex == 4,
+                              icon: Icons.logout_outlined),);
+                    },
+                  ),
                   const SizedBox(
                     height: 10,
                   ),
