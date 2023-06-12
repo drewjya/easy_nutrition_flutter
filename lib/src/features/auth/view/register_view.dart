@@ -97,9 +97,6 @@ class RegisterView extends HookConsumerWidget {
                   ),
                 ),
               ),
-              const SizedBox(
-                height: 300,
-              )
             ],
           ),
         ),

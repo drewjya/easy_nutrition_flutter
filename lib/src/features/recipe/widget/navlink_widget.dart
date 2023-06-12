@@ -37,6 +37,7 @@ class NavLinkWidget extends HookConsumerWidget {
         'onTap': () {
           if (ref.read(detailActivateProvider)) {
             ref.read(detailActivateProvider.notifier).back();
+            
             Navigator.pushAndRemoveUntil(
                 context,
                 PageRouteBuilder(
@@ -105,7 +106,7 @@ class NavLinkWidget extends HookConsumerWidget {
             Container(
               width: 80,
               color: CustomColor.primaryBackgroundColor,
-              child: Column(
+              child: ListView(
                 children: [
                   const SizedBox(
                     height: 30,
@@ -123,84 +124,81 @@ class NavLinkWidget extends HookConsumerWidget {
                               ),
                           ])
                       .expand((element) => element),
-                  const Spacer(),
                   Consumer(
                     builder: (context, ref, child) {
                       final user = ref.watch(currUserProvider);
 
                       return user.when(
-                          data: (data) {
-                            return data != null
-                                ? const SizedBox()
-                                : ItemTile(
-                                    onTap: () {
-                                      if (ref.read(detailActivateProvider)) {
-                                        ref
-                                            .read(
-                                                detailActivateProvider.notifier)
-                                            .back();
-                                        Navigator.pushAndRemoveUntil(
-                                            context,
-                                            PageRouteBuilder(
-                                              pageBuilder: (context, animation1,
-                                                      animation2) =>
-                                                  const HomeView(),
-                                              transitionDuration: Duration.zero,
-                                              reverseTransitionDuration:
-                                                  Duration.zero,
-                                            ),
-                                            (route) => false);
-                                      }
+                        data: (data) {
+                          return data != null
+                              ? const SizedBox()
+                              : ItemTile(
+                                  onTap: () {
+                                    if (ref.read(detailActivateProvider)) {
                                       ref
-                                          .read(
-                                              navLinkProviderProvider.notifier)
-                                          .changeIndex(0);
-                                      Navigator.push(
+                                          .read(detailActivateProvider.notifier)
+                                          .back();
+                                      Navigator.pushAndRemoveUntil(
                                           context,
-                                          MaterialPageRoute(
-                                            builder: (context) =>
-                                                const LoginView(),
-                                          ));
-                                    },
-                                    isSelected: selectedIndex == 4,
-                                    icon: Icons.logout_outlined);
-                          },
-                          error: (error, stackTrace) {
-                            return ItemTile(
-                                onTap: () {
-                                  if (ref.read(detailActivateProvider)) {
+                                          PageRouteBuilder(
+                                            pageBuilder: (context, animation1,
+                                                    animation2) =>
+                                                const HomeView(),
+                                            transitionDuration: Duration.zero,
+                                            reverseTransitionDuration:
+                                                Duration.zero,
+                                          ),
+                                          (route) => false);
+                                    }
                                     ref
-                                        .read(detailActivateProvider.notifier)
-                                        .back();
-                                    Navigator.pushAndRemoveUntil(
+                                        .read(navLinkProviderProvider.notifier)
+                                        .changeIndex(0);
+                                    Navigator.push(
                                         context,
-                                        PageRouteBuilder(
-                                          pageBuilder: (context, animation1,
-                                                  animation2) =>
-                                              const HomeView(),
-                                          transitionDuration: Duration.zero,
-                                          reverseTransitionDuration:
-                                              Duration.zero,
-                                        ),
-                                        (route) => false);
-                                  }
+                                        MaterialPageRoute(
+                                          builder: (context) =>
+                                              const LoginView(),
+                                        ));
+                                  },
+                                  isSelected: selectedIndex == 4,
+                                  icon: Icons.logout_outlined);
+                        },
+                        error: (error, stackTrace) {
+                          return ItemTile(
+                              onTap: () {
+                                if (ref.read(detailActivateProvider)) {
                                   ref
-                                      .read(navLinkProviderProvider.notifier)
-                                      .changeIndex(0);
-                                  Navigator.push(
+                                      .read(detailActivateProvider.notifier)
+                                      .back();
+                                  Navigator.pushAndRemoveUntil(
                                       context,
-                                      MaterialPageRoute(
-                                        builder: (context) => const LoginView(),
-                                      ));
-                                },
-                                isSelected: selectedIndex == 4,
-                                icon: Icons.logout_outlined);
-                            
-                          },
-                          loading: () => ItemTile(
-                              onTap: null,
+                                      PageRouteBuilder(
+                                        pageBuilder:
+                                            (context, animation1, animation2) =>
+                                                const HomeView(),
+                                        transitionDuration: Duration.zero,
+                                        reverseTransitionDuration:
+                                            Duration.zero,
+                                      ),
+                                      (route) => false);
+                                }
+                                ref
+                                    .read(navLinkProviderProvider.notifier)
+                                    .changeIndex(0);
+                                Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (context) => const LoginView(),
+                                    ));
+                              },
                               isSelected: selectedIndex == 4,
-                              icon: Icons.logout_outlined),);
+                              icon: Icons.logout_outlined);
+                        },
+                        loading: () => ItemTile(
+                            onTap: null,
+                            isSelected: selectedIndex == 4,
+                            icon: Icons.logout_outlined),
+                      );
                     },
                   ),
                   const SizedBox(

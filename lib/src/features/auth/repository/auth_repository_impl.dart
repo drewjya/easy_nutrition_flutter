@@ -48,6 +48,7 @@ class AuthRepositoryImpl extends AuthRepository {
       }
       ref.read(userProvider.notifier).createUser(
             userModel: User(
+              savedIngredients: [],
               id: auth.user!.uid,
               name: fullName,
               createdRecipe: [],

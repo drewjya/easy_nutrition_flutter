@@ -88,9 +88,6 @@ class LoginView extends HookConsumerWidget {
                   ),
                 ),
               ),
-              const SizedBox(
-                height: 300,
-              )
             ],
           ),
         ),

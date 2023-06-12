@@ -1,17 +1,21 @@
 import 'package:easy_nutrition/src/core/core.dart';
 import 'package:easy_nutrition/src/features/features.dart';
+import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:intl/date_symbol_data_local.dart';
-import 'package:firebase_core/firebase_core.dart';
+
 import 'firebase_options.dart';
+
+final GlobalKey<ScaffoldMessengerState> snackbarKey =
+    GlobalKey<ScaffoldMessengerState>();
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp(
-  options: DefaultFirebaseOptions.currentPlatform,
-);
+    options: DefaultFirebaseOptions.currentPlatform,
+  );
   await initializeDateFormatting('id_ID', null);
   runApp(ProviderScope(
     observers: [Logger()],
@@ -27,6 +31,7 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       title: 'EasyNutrition',
       debugShowCheckedModeBanner: false,
+      scaffoldMessengerKey: snackbarKey,
       theme: ThemeData(
         elevatedButtonTheme: ElevatedButtonThemeData(
           style: ElevatedButton.styleFrom(

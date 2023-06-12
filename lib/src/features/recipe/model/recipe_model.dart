@@ -3,20 +3,85 @@ import 'dart:convert';
 
 import 'package:flutter/foundation.dart';
 
+class SavedIngredients {
+  final String id;
+  final DateTime tanggalMasuk;
+  final int quantity;
+  SavedIngredients({
+    required this.id,
+    required this.tanggalMasuk,
+    required this.quantity,
+  });
+
+  SavedIngredients copyWith({
+    String? id,
+    DateTime? tanggalMasuk,
+    int? quantity,
+  }) {
+    return SavedIngredients(
+      id: id ?? this.id,
+      tanggalMasuk: tanggalMasuk ?? this.tanggalMasuk,
+      quantity: quantity ?? this.quantity,
+    );
+  }
+
+  Map<String, dynamic> toMap() {
+    return <String, dynamic>{
+      'id': id,
+      'tanggalMasuk': tanggalMasuk.millisecondsSinceEpoch,
+      'quantity': quantity,
+    };
+  }
+
+  factory SavedIngredients.fromMap(Map<String, dynamic> map) {
+    return SavedIngredients(
+      id: map['id'] as String,
+      tanggalMasuk:
+          DateTime.fromMillisecondsSinceEpoch(map['tanggalMasuk'] as int),
+      quantity: map['quantity'] as int,
+    );
+  }
+
+  String toJson() => json.encode(toMap());
+
+  factory SavedIngredients.fromJson(String source) =>
+      SavedIngredients.fromMap(json.decode(source) as Map<String, dynamic>);
+
+  @override
+  String toString() =>
+      'SavedIngredients(id: $id, tanggalMasuk: $tanggalMasuk, quantity: $quantity)';
+
+  @override
+  bool operator ==(covariant SavedIngredients other) {
+    if (identical(this, other)) return true;
+
+    return other.id == id &&
+        other.tanggalMasuk == tanggalMasuk &&
+        other.quantity == quantity;
+  }
+
+  @override
+  int get hashCode => id.hashCode ^ tanggalMasuk.hashCode ^ quantity.hashCode;
+}
+
 class User {
   final String id;
   final String name;
   final List<String> createdRecipe;
   final List<String> favoriteRecipe;
+  final List<SavedIngredients> savedIngredients;
   final int totalPoint;
   final DateTime tanggalJoin;
+  final String? profileUrl;
   User({
     required this.id,
     required this.name,
     required this.createdRecipe,
     required this.favoriteRecipe,
+    required this.savedIngredients,
     required this.totalPoint,
     required this.tanggalJoin,
+    this.profileUrl,
   });
 
   User copyWith({
@@ -24,16 +89,20 @@ class User {
     String? name,
     List<String>? createdRecipe,
     List<String>? favoriteRecipe,
+    List<SavedIngredients>? savedIngredients,
     int? totalPoint,
     DateTime? tanggalJoin,
+    String? profileUrl,
   }) {
     return User(
       id: id ?? this.id,
       name: name ?? this.name,
       createdRecipe: createdRecipe ?? this.createdRecipe,
       favoriteRecipe: favoriteRecipe ?? this.favoriteRecipe,
+      savedIngredients: savedIngredients ?? this.savedIngredients,
       totalPoint: totalPoint ?? this.totalPoint,
       tanggalJoin: tanggalJoin ?? this.tanggalJoin,
+      profileUrl: profileUrl ?? this.profileUrl,
     );
   }
 
@@ -43,13 +112,19 @@ class User {
       'name': name,
       'createdRecipe': createdRecipe,
       'favoriteRecipe': favoriteRecipe,
+      'savedIngredients': savedIngredients.map((x) => x.toMap()).toList(),
       'totalPoint': totalPoint,
       'tanggalJoin': tanggalJoin.millisecondsSinceEpoch,
+      'profileUrl': profileUrl,
     };
   }
 
   factory User.fromMap(Map<String, dynamic> map) {
     return User(
+      savedIngredients: loadFromNullable(map["savedIngredients"])
+          .cast<Map<String, dynamic>>()
+          .map((e) => SavedIngredients.fromMap(e))
+          .toList(),
       id: map['id'] as String,
       name: map['name'] as String,
       createdRecipe: List<String>.from(map['createdRecipe'] != null
@@ -59,6 +134,7 @@ class User {
           ? map['favoriteRecipe'] as List<String>
           : []),
       totalPoint: map['totalPoint'] as int,
+      profileUrl: map["profileUrl"] as String?,
       tanggalJoin: DateTime.fromMillisecondsSinceEpoch(map['tanggalJoin']),
     );
   }
@@ -70,7 +146,7 @@ class User {
 
   @override
   String toString() {
-    return 'User(id: $id, name: $name, createdRecipe: $createdRecipe, favoriteRecipe: $favoriteRecipe, totalPoint: $totalPoint, tanggalJoin: $tanggalJoin)';
+    return 'User(id: $id, name: $name, createdRecipe: $createdRecipe, favoriteRecipe: $favoriteRecipe, savedIngredients: $savedIngredients, totalPoint: $totalPoint, tanggalJoin: $tanggalJoin, profileUrl: $profileUrl)';
   }
 
   @override
@@ -81,8 +157,10 @@ class User {
         other.name == name &&
         listEquals(other.createdRecipe, createdRecipe) &&
         listEquals(other.favoriteRecipe, favoriteRecipe) &&
+        listEquals(other.savedIngredients, savedIngredients) &&
         other.totalPoint == totalPoint &&
-        other.tanggalJoin == tanggalJoin;
+        other.tanggalJoin == tanggalJoin &&
+        other.profileUrl == profileUrl;
   }
 
   @override
@@ -91,8 +169,10 @@ class User {
         name.hashCode ^
         createdRecipe.hashCode ^
         favoriteRecipe.hashCode ^
+        savedIngredients.hashCode ^
         totalPoint.hashCode ^
-        tanggalJoin.hashCode;
+        tanggalJoin.hashCode ^
+        profileUrl.hashCode;
   }
 }
 
@@ -103,6 +183,7 @@ class RecipeModel {
   final String authorName;
   final num rating;
   final List<Reviews> reviews;
+  final num calories;
   final List<Steps> steps;
   final List<IngredientRecipe> ingredientList;
   final int totalLikes;
@@ -118,6 +199,7 @@ class RecipeModel {
     required this.authorName,
     required this.rating,
     required this.reviews,
+    required this.calories,
     required this.steps,
     required this.ingredientList,
     required this.totalLikes,
@@ -134,6 +216,7 @@ class RecipeModel {
     String? authorName,
     num? rating,
     List<Reviews>? reviews,
+    num? calories,
     List<Steps>? steps,
     List<IngredientRecipe>? ingredientList,
     int? totalLikes,
@@ -149,6 +232,7 @@ class RecipeModel {
       authorName: authorName ?? this.authorName,
       rating: rating ?? this.rating,
       reviews: reviews ?? this.reviews,
+      calories: calories ?? this.calories,
       steps: steps ?? this.steps,
       ingredientList: ingredientList ?? this.ingredientList,
       totalLikes: totalLikes ?? this.totalLikes,
@@ -167,18 +251,20 @@ class RecipeModel {
       'authorName': authorName,
       'rating': rating,
       'reviews': reviews.map((x) => x.toMap()).toList(),
+      'calories': calories,
       'steps': steps.map((x) => x.toMap()).toList(),
       'ingredientList': ingredientList.map((x) => x.toMap()).toList(),
       'totalLikes': totalLikes,
-      'fileUrl': fileUrl,
       'categoriesList': categoriesList,
-      'timeFormat': timeFormat,
       'timeNeeded': timeNeeded,
+      'timeFormat': timeFormat,
+      'fileUrl': fileUrl,
     };
   }
 
   factory RecipeModel.fromMap(Map<String, dynamic> map) {
     return RecipeModel(
+      calories: map["calories"],
       categoriesList: (map['categoriesList'] != null
               ? map['categoriesList'] as List
               : List.empty())
@@ -216,7 +302,7 @@ class RecipeModel {
 
   @override
   String toString() {
-    return 'RecipeModel(id: $id, recipeName: $recipeName, authorId: $authorId, authorName: $authorName, rating: $rating, reviews: $reviews, steps: $steps, ingredientList: $ingredientList, totalLikes: $totalLikes, categoriesList: $categoriesList, timeNeeded: $timeNeeded, timeFormat: $timeFormat, fileUrl: $fileUrl)';
+    return 'RecipeModel(id: $id, recipeName: $recipeName, authorId: $authorId, authorName: $authorName, rating: $rating, reviews: $reviews, calories: $calories, steps: $steps, ingredientList: $ingredientList, totalLikes: $totalLikes, categoriesList: $categoriesList, timeNeeded: $timeNeeded, timeFormat: $timeFormat, fileUrl: $fileUrl)';
   }
 
   @override
@@ -229,6 +315,7 @@ class RecipeModel {
         other.authorName == authorName &&
         other.rating == rating &&
         listEquals(other.reviews, reviews) &&
+        other.calories == calories &&
         listEquals(other.steps, steps) &&
         listEquals(other.ingredientList, ingredientList) &&
         other.totalLikes == totalLikes &&
@@ -246,6 +333,7 @@ class RecipeModel {
         authorName.hashCode ^
         rating.hashCode ^
         reviews.hashCode ^
+        calories.hashCode ^
         steps.hashCode ^
         ingredientList.hashCode ^
         totalLikes.hashCode ^
@@ -258,21 +346,25 @@ class RecipeModel {
 
 class IngredientRecipe {
   final String ingredientId;
+  final String name;
   final num quantity;
   final String unit;
   IngredientRecipe({
     required this.ingredientId,
+    required this.name,
     required this.quantity,
     required this.unit,
   });
 
   IngredientRecipe copyWith({
     String? ingredientId,
+    String? name,
     num? quantity,
     String? unit,
   }) {
     return IngredientRecipe(
       ingredientId: ingredientId ?? this.ingredientId,
+      name: name ?? this.name,
       quantity: quantity ?? this.quantity,
       unit: unit ?? this.unit,
     );
@@ -281,6 +373,7 @@ class IngredientRecipe {
   Map<String, dynamic> toMap() {
     return <String, dynamic>{
       'ingredientId': ingredientId,
+      'name': name,
       'quantity': quantity,
       'unit': unit,
     };
@@ -289,6 +382,7 @@ class IngredientRecipe {
   factory IngredientRecipe.fromMap(Map<String, dynamic> map) {
     return IngredientRecipe(
       ingredientId: map['ingredientId'] as String,
+      name: map['name'] as String,
       quantity: map['quantity'] as num,
       unit: map['unit'] as String,
     );
@@ -300,38 +394,61 @@ class IngredientRecipe {
       IngredientRecipe.fromMap(json.decode(source) as Map<String, dynamic>);
 
   @override
-  String toString() =>
-      'IngredientRecipe(ingredientId: $ingredientId, quantity: $quantity, unit: $unit)';
+  String toString() {
+    return 'IngredientRecipe(ingredientId: $ingredientId, name: $name, quantity: $quantity, unit: $unit)';
+  }
 
   @override
   bool operator ==(covariant IngredientRecipe other) {
     if (identical(this, other)) return true;
 
     return other.ingredientId == ingredientId &&
+        other.name == name &&
         other.quantity == quantity &&
         other.unit == unit;
   }
 
   @override
-  int get hashCode => ingredientId.hashCode ^ quantity.hashCode ^ unit.hashCode;
+  int get hashCode {
+    return ingredientId.hashCode ^
+        name.hashCode ^
+        quantity.hashCode ^
+        unit.hashCode;
+  }
 }
 
 class Ingredients {
   final String id;
   final String ingredientName;
+  final num shelfTime;
+  final String shelftUnit;
+  final String unit;
+  final String description;
 
   Ingredients({
     required this.id,
     required this.ingredientName,
+    required this.shelfTime,
+    required this.shelftUnit,
+    required this.unit,
+    required this.description,
   });
 
   Ingredients copyWith({
     String? id,
     String? ingredientName,
+    num? shelfTime,
+    String? shelftUnit,
+    String? unit,
+    String? description,
   }) {
     return Ingredients(
       id: id ?? this.id,
       ingredientName: ingredientName ?? this.ingredientName,
+      shelfTime: shelfTime ?? this.shelfTime,
+      shelftUnit: shelftUnit ?? this.shelftUnit,
+      unit: unit ?? this.unit,
+      description: description ?? this.description,
     );
   }
 
@@ -339,6 +456,10 @@ class Ingredients {
     return <String, dynamic>{
       'id': id,
       'ingredientName': ingredientName,
+      'shelfTime': shelfTime,
+      'shelftUnit': shelftUnit,
+      'unit': unit,
+      'description': description,
     };
   }
 
@@ -346,6 +467,10 @@ class Ingredients {
     return Ingredients(
       id: map['id'] as String,
       ingredientName: map['ingredientName'] as String,
+      shelfTime: map['shelfTime'] as num,
+      shelftUnit: map['shelftUnit'] as String,
+      unit: map['unit'] as String,
+      description: map['description'] as String,
     );
   }
 
@@ -355,17 +480,31 @@ class Ingredients {
       Ingredients.fromMap(json.decode(source) as Map<String, dynamic>);
 
   @override
-  String toString() => 'Ingredients(id: $id, ingredientName: $ingredientName)';
+  String toString() {
+    return 'Ingredients(id: $id, ingredientName: $ingredientName, shelfTime: $shelfTime, shelftUnit: $shelftUnit, unit: $unit, description: $description)';
+  }
 
   @override
   bool operator ==(covariant Ingredients other) {
     if (identical(this, other)) return true;
 
-    return other.id == id && other.ingredientName == ingredientName;
+    return other.id == id &&
+        other.ingredientName == ingredientName &&
+        other.shelfTime == shelfTime &&
+        other.shelftUnit == shelftUnit &&
+        other.unit == unit &&
+        other.description == description;
   }
 
   @override
-  int get hashCode => id.hashCode ^ ingredientName.hashCode;
+  int get hashCode {
+    return id.hashCode ^
+        ingredientName.hashCode ^
+        shelfTime.hashCode ^
+        shelftUnit.hashCode ^
+        unit.hashCode ^
+        description.hashCode;
+  }
 }
 
 class Reviews {
@@ -422,18 +561,22 @@ class Reviews {
 class Steps {
   final String desc;
   final String fileUrl;
+  final String id;
   Steps({
     required this.desc,
     required this.fileUrl,
+    required this.id,
   });
 
   Steps copyWith({
     String? desc,
     String? fileUrl,
+    String? id,
   }) {
     return Steps(
       desc: desc ?? this.desc,
       fileUrl: fileUrl ?? this.fileUrl,
+      id: id ?? this.id,
     );
   }
 
@@ -448,6 +591,7 @@ class Steps {
     return Steps(
       desc: map['desc'] as String,
       fileUrl: map['fileUrl'] as String,
+      id: "",
     );
   }
 
@@ -457,17 +601,17 @@ class Steps {
       Steps.fromMap(json.decode(source) as Map<String, dynamic>);
 
   @override
-  String toString() => 'Steps(desc: $desc, fileUrl: $fileUrl)';
+  String toString() => 'Steps(desc: $desc, fileUrl: $fileUrl, id: $id)';
 
   @override
   bool operator ==(covariant Steps other) {
     if (identical(this, other)) return true;
 
-    return other.desc == desc && other.fileUrl == fileUrl;
+    return other.desc == desc && other.fileUrl == fileUrl && other.id == id;
   }
 
   @override
-  int get hashCode => desc.hashCode ^ fileUrl.hashCode;
+  int get hashCode => desc.hashCode ^ fileUrl.hashCode ^ id.hashCode;
 }
 
 List loadFromNullable(dynamic data) {

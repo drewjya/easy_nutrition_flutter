@@ -1,13 +1,13 @@
-import 'dart:math';
-
 import 'package:easy_nutrition/src/core/core.dart';
+import 'package:easy_nutrition/src/features/recipe/providers/user_provider.dart';
 import 'package:flutter/material.dart';
+import 'package:hooks_riverpod/hooks_riverpod.dart';
 
-class LeaderboardPage extends StatelessWidget {
+class LeaderboardPage extends ConsumerWidget {
   const LeaderboardPage({Key? key}) : super(key: key);
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, ref) {
     return Container(
       height: MediaQuery.of(context).size.height * 0.95,
       decoration: BoxDecoration(
@@ -61,43 +61,49 @@ class LeaderboardPage extends StatelessWidget {
                       ],
                     ),
                   ),
-                  ...List.generate(
-                    5,
-                    (index) => [
-                      Row(
-                        children: [
-                          Expanded(
-                            flex: 2,
-                            child: Center(child: Text("${index + 1}")),
-                          ),
-                          const Expanded(
-                            flex: 6,
-                            child: Center(
-                                child: Text("Anssh ashbhs hsajsa hsjsa")),
-                          ),
-                          Expanded(
-                            flex: 3,
-                            child: Center(
-                                child: Text(
-                                    Random(291).nextInt(index + 1).toString())),
-                          ),
-                          Expanded(
-                            flex: 3,
-                            child: Center(
-                              child: ElevatedButton(
-                                onPressed: () {},
-                                child: const Text("Lihat Profile"),
+                  ...ref.watch(userProvider).maybeWhen(
+                    data: (data) {
+                      return [
+                        for (var i = 0; i < data.length; i++)
+                          Column(
+                            children: [
+                              Row(
+                                children: [
+                                  Expanded(
+                                    flex: 2,
+                                    child: Center(child: Text("${i + 1}")),
+                                  ),
+                                  Expanded(
+                                    flex: 6,
+                                    child: Center(child: Text(data[i].name)),
+                                  ),
+                                  Expanded(
+                                    flex: 3,
+                                    child: Center(
+                                        child: Text("${data[i].totalPoint}")),
+                                  ),
+                                  Expanded(
+                                    flex: 3,
+                                    child: Center(
+                                      child: ElevatedButton(
+                                        onPressed: () {},
+                                        child: const Text("Lihat Profile"),
+                                      ),
+                                    ),
+                                  ),
+                                ],
                               ),
-                            ),
-                          ),
-                        ],
-                      ),
-                      if (index != 4)
-                        const SizedBox(
-                          height: 5,
-                        ),
-                    ],
-                  ).expand((element) => element),
+                              const SizedBox(
+                                height: 5,
+                              ),
+                            ],
+                          )
+                      ];
+                    },
+                    orElse: () {
+                      return [];
+                    },
+                  ),
                 ],
               ),
             ),

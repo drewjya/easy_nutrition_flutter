@@ -378,20 +378,28 @@ class HeaderHome extends StatelessWidget {
 class SearchTextField extends HookWidget {
   final VoidCallback? onTap;
   final String? hintText;
+  final TextEditingController? controller;
+  final Function(String change)? onChanged;
+
   const SearchTextField({
     super.key,
     this.onTap,
     this.hintText,
+    this.controller,
+    this.onChanged,
   });
 
   @override
   Widget build(BuildContext context) {
     final isEnabled = useState(false);
+
     return GestureDetector(
       onTap: () {
         isEnabled.value = true;
       },
       child: TextField(
+        controller: controller,
+        onChanged: onChanged,
         cursorColor: Colors.white,
         onTap: onTap,
         autofocus: false,
