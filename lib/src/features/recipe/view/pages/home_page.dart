@@ -4,12 +4,17 @@ import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 
+final currentRecipeProvider = StateProvider.autoDispose<RecipeModel?>((ref) {
+  return null;
+});
+
 class HomePage extends HookConsumerWidget {
   const HomePage({super.key});
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final GlobalKey<ScaffoldState> scaffoldKey =
         useMemoized(() => GlobalKey<ScaffoldState>());
+    final recipe = ref.watch(currentRecipeProvider);
     return GestureDetector(
       onTap: () {
         FocusManager.instance.primaryFocus?.unfocus();
@@ -20,92 +25,96 @@ class HomePage extends HookConsumerWidget {
         key: scaffoldKey,
         endDrawer: Drawer(
           backgroundColor: CustomColor.primaryBackgroundColor,
-          child: ListView(
-            padding: const EdgeInsets.symmetric(horizontal: 16),
-            children: <Widget>[
-              DrawerHeader(
-                padding: EdgeInsets.zero,
-                margin: EdgeInsets.zero,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Spacer(),
-                    InkWell(
-                        borderRadius: BorderRadius.circular(50),
-                        onTap: () {
-                          Navigator.pop(context);
-                        },
-                        child: const Icon(
-                          Icons.arrow_back_sharp,
-                          color: Colors.white,
-                        )),
-                    const Spacer(),
-                    const Text(
-                      'Java',
-                      style: TextStyle(
-                        fontSize: 28,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                    const SizedBox(
-                      height: 10,
-                    ),
-                    const Text(
-                      'Java',
-                      style: TextStyle(
-                        color: CustomColor.borderTextField,
-                        fontSize: 14,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                    const Padding(
-                      padding: EdgeInsets.symmetric(vertical: 8.0),
-                      child: Divider(
-                        color: CustomColor.borderGreyTextField,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              ...List.generate(
-                  5,
-                  (index) => [
-                        const CardIngredientsDrawer(
-                          imageLink: '',
-                          ingredients: "2 pcs",
-                          name: 'Ayam',
+          child: Consumer(builder: (context, ref, child) {
+            if (recipe == null) {
+              return SizedBox();
+            }
+            return ListView(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              children: <Widget>[
+                DrawerHeader(
+                  padding: EdgeInsets.zero,
+                  margin: EdgeInsets.zero,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Spacer(),
+                      InkWell(
+                          borderRadius: BorderRadius.circular(50),
+                          onTap: () {
+                            Navigator.pop(context);
+                          },
+                          child: const Icon(
+                            Icons.arrow_back_sharp,
+                            color: Colors.white,
+                          )),
+                      const Spacer(),
+                      Text(
+                        recipe.recipeName,
+                        style: TextStyle(
+                          fontSize: 28,
+                          fontWeight: FontWeight.w600,
                         ),
-                        const SizedBox(
-                          height: 5,
+                      ),
+                      const SizedBox(
+                        height: 10,
+                      ),
+                      Text(
+                        'By ${recipe.authorName}',
+                        style: TextStyle(
+                          color: CustomColor.borderTextField,
+                          fontSize: 14,
+                          fontWeight: FontWeight.w600,
                         ),
-                      ]).expand((element) => element),
-              const SizedBox(
-                height: 12,
-              ),
-              ElevatedButton(
-                onPressed: () {
-                  scaffoldKey.currentState?.closeEndDrawer();
-                  ref.read(detailActivateProvider.notifier).active();
-                  Navigator.push(
-                    context,
-                    PageRouteBuilder(
-                      pageBuilder: (context, animation1, animation2) =>
-                          const DetailRecipeView(),
-                      transitionDuration: Duration.zero,
-                      reverseTransitionDuration: Duration.zero,
-                    ),
-                  );
-                },
-                child: const Padding(
-                  padding: EdgeInsets.all(12.0),
-                  child: Text("Masak Sekarang"),
+                      ),
+                      const Padding(
+                        padding: EdgeInsets.symmetric(vertical: 8.0),
+                        child: Divider(
+                          color: CustomColor.borderGreyTextField,
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
-              ),
-              const SizedBox(
-                height: 12,
-              ),
-            ],
-          ),
+                ...recipe.ingredientList
+                    .map((e) => [
+                          const CardIngredientsDrawer(
+                            ingredients: "2 pcs",
+                            name: 'Ayam',
+                          ),
+                          const SizedBox(
+                            height: 5,
+                          ),
+                        ])
+                    .expand((element) => element),
+                const SizedBox(
+                  height: 12,
+                ),
+                ElevatedButton(
+                  onPressed: () {
+                    scaffoldKey.currentState?.closeEndDrawer();
+                    ref.read(detailActivateProvider.notifier).active();
+                    Navigator.push(
+                      context,
+                      PageRouteBuilder(
+                        pageBuilder: (context, animation1, animation2) =>
+                            const DetailRecipeView(),
+                        transitionDuration: Duration.zero,
+                        reverseTransitionDuration: Duration.zero,
+                      ),
+                    );
+                  },
+                  child: const Padding(
+                    padding: EdgeInsets.all(12.0),
+                    child: Text("Masak Sekarang"),
+                  ),
+                ),
+                const SizedBox(
+                  height: 12,
+                ),
+              ],
+            );
+          }),
         ),
         body: Column(
           children: [
@@ -177,11 +186,15 @@ class HomeRecipeContent extends ConsumerWidget {
                   child: Center(
                     child: Wrap(
                       spacing: 10,
+                      runSpacing: 10,
                       crossAxisAlignment: WrapCrossAlignment.start,
                       children: data
                           .map((current) => RecipeCard(
                               recipe: current,
                               onTap: () {
+                                ref
+                                    .read(currentRecipeProvider.notifier)
+                                    .update((state) => current);
                                 scaffoldKey.currentState?.openEndDrawer();
                               }))
                           .toList(),
@@ -206,23 +219,18 @@ class HomeRecipeContent extends ConsumerWidget {
 class CardIngredientsDrawer extends StatelessWidget {
   final String name;
   final String ingredients;
-  final String imageLink;
+
   const CardIngredientsDrawer({
     Key? key,
     required this.name,
     required this.ingredients,
-    required this.imageLink,
   }) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
     return Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
+      crossAxisAlignment: CrossAxisAlignment.center,
       children: [
-        const CircleAvatar(
-          radius: 22,
-          // foregroundImage: NetworkImage(name),
-        ),
         const SizedBox(
           width: 6,
         ),
@@ -231,7 +239,6 @@ class CardIngredientsDrawer extends StatelessWidget {
         ),
         const Spacer(),
         Container(
-          height: 44,
           decoration: BoxDecoration(
               color: CustomColor.backgroundTextField,
               border: Border.all(
@@ -240,7 +247,7 @@ class CardIngredientsDrawer extends StatelessWidget {
               ),
               borderRadius: BorderRadius.circular(15)),
           child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 20),
+            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
             child: Center(
               child: Text(
                 ingredients,
@@ -291,6 +298,10 @@ class RecipeCard extends StatelessWidget {
                       child: Text(
                         recipe.recipeName,
                         maxLines: 2,
+                        style: TextStyle(
+                          fontWeight: FontWeight.w700,
+                          fontSize: 16,
+                        ),
                         textAlign: TextAlign.center,
                         overflow: TextOverflow.ellipsis,
                       ),
@@ -300,8 +311,16 @@ class RecipeCard extends StatelessWidget {
                   const SizedBox(
                     height: 6,
                   ),
-                  ...recipe.ingredientList.take(2).map((e) => Text(
-                      "${e.ingredientId.split("").take(5).join()} ${e.quantity} ${e.unit}")),
+                  SizedBox(
+                    height: 50,
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        ...recipe.ingredientList.take(2).map(
+                            (e) => Text("${e.name} ${e.quantity} ${e.unit}")),
+                      ],
+                    ),
+                  ),
                   const SizedBox(
                     height: 16,
                   ),

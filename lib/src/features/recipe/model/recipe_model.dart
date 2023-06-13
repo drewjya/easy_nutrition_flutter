@@ -1,5 +1,6 @@
 // ignore_for_file: public_member_api_docs, sort_constructors_first
 import 'dart:convert';
+import 'dart:io';
 
 import 'package:flutter/foundation.dart';
 
@@ -192,6 +193,7 @@ class RecipeModel {
   final String timeFormat;
 
   final String fileUrl;
+
   RecipeModel({
     required this.id,
     required this.recipeName,
@@ -562,10 +564,12 @@ class Steps {
   final String desc;
   final String fileUrl;
   final String id;
+  final File? file;
   Steps({
     required this.desc,
     required this.fileUrl,
     required this.id,
+    this.file,
   });
 
   Steps copyWith({

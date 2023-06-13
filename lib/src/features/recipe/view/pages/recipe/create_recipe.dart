@@ -1,5 +1,6 @@
 // ignore_for_file: public_member_api_docs, sort_constructors_first
 import 'dart:developer';
+import 'dart:io';
 import 'dart:math' as math;
 
 import 'package:easy_nutrition/main.dart';
@@ -9,6 +10,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:uuid/uuid.dart';
 
 final indexCreateProvider = StateProvider.autoDispose<int>((ref) {
@@ -61,9 +63,11 @@ class CreateRecipe extends HookWidget {
   @override
   Widget build(BuildContext context) {
     final namaController = useTextEditingController();
+    final kaloriController = useTextEditingController();
     final tabController = useTabController(initialLength: 2);
-    final numberStep = useState([1]);
-    log("${numberStep.value}");
+
+    // final selectedCategory = useState(<int,String>{});
+
     return NavLinkWidget(
       body: Container(
         height: MediaQuery.of(context).size.height * 0.9,
@@ -75,6 +79,7 @@ class CreateRecipe extends HookWidget {
         padding: const EdgeInsets.all(16),
         child: Consumer(builder: (context, ref, child) {
           final currRecipe = ref.watch(currRecipeIngredientProvider);
+          final currentSteps = ref.watch(currentStepProvider);
           return [
             TabBarView(
               controller: tabController,
@@ -117,6 +122,26 @@ class CreateRecipe extends HookWidget {
                         ),
                         ElevatedButton(
                             onPressed: () {
+                              if (namaController.text.isEmpty) {
+                                showToast(message: "Nama Tidak Boleh Kosong");
+                                return;
+                              } else if (kaloriController.text.isEmpty) {
+                                showToast(message: "Kalori Tidak Boleh Kosong");
+                                return;
+                              } else if (ref
+                                  .read(selectedDropdownProvider)
+                                  .isEmpty) {
+                                showToast(
+                                    message: "Kategori Tidak Boleh Kosong");
+                                return;
+                              } else if (ref
+                                  .read(currRecipeIngredientProvider)
+                                  .isEmpty) {
+                                showToast(
+                                    message:
+                                        "Bahan Masakan Tidak Boleh Kosong");
+                                return;
+                              }
                               tabController.animateTo(1);
                             },
                             child: const Text("Detail Resep")),
@@ -135,9 +160,14 @@ class CreateRecipe extends HookWidget {
                         const SizedBox(
                           width: 15,
                         ),
-                        const Expanded(
+                        Expanded(
                             child: RecipeTextField(
                           label: "Jumlah Kalori",
+                          controller: kaloriController,
+                          keyboardType: TextInputType.number,
+                          inputFormatters: [
+                            DecimalTextInputFormatter(decimalRange: 2)
+                          ],
                         )),
                         const SizedBox(
                           width: 15,
@@ -254,7 +284,7 @@ class CreateRecipe extends HookWidget {
                                           Expanded(
                                             child: Center(
                                                 child: Text(
-                                                    "${e.quantity} ${e.unit}")),
+                                                    "${e.quantity} ${e.unit}${e.quantity.addS}")),
                                           ),
                                           Expanded(
                                             child: Center(
@@ -319,6 +349,36 @@ class CreateRecipe extends HookWidget {
                         ),
                         ElevatedButton(
                             onPressed: () {
+                              if (currentSteps.isEmpty) {
+                                showToast(message: "Steps tidak boleh kosong");
+                                return;
+                              }
+                              for (var i = 0; i < currentSteps.length; i++) {
+                                if (currentSteps[i].desc.isEmpty) {
+                                  showToast(
+                                      message: "Steps tidak boleh kosong");
+                                  return;
+                                }
+                                if (currentSteps[i].file == null) {
+                                  showToast(
+                                      message:
+                                          "Gambar Steps Tidak Boleh Kosong");
+                                  return;
+                                }
+                                ref.read(recipeProvider.notifier).createRecipe(
+                                      name: namaController.text,
+                                      calories:
+                                          num.parse(kaloriController.text),
+                                      categories:
+                                          ref.read(selectedDropdownProvider),
+                                      steps: currentSteps,
+                                      recipeFile: currentSteps[0].file!,
+                                      ingredientRecipe: ref
+                                          .read(currRecipeIngredientProvider),
+                                      timeNeeded: 30,
+                                      timeFormat: "minute",
+                                    );
+                              }
                               showDialog(
                                 context: context,
                                 builder: (context) => AlertDialog(
@@ -347,128 +407,22 @@ class CreateRecipe extends HookWidget {
                     ),
                     Expanded(
                         child: ListView(
-                            children: List.generate(
-                                numberStep.value.length,
-                                (index) => [
-                                      InkWell(
-                                        onTap: () {
-                                          var val = numberStep.value;
-                                          val.removeAt(index);
-                                          numberStep.value = val;
-                                        },
-                                        child: Container(
-                                          height: 120,
-                                          decoration: BoxDecoration(
-                                            color: CustomColor.backgroundDetail,
-                                            borderRadius:
-                                                BorderRadius.circular(5),
-                                          ),
-                                          padding: const EdgeInsets.symmetric(
-                                              horizontal: 8, vertical: 5),
-                                          child: Row(
-                                            children: [
-                                              Expanded(
-                                                child: Column(
-                                                  crossAxisAlignment:
-                                                      CrossAxisAlignment.start,
-                                                  children: [
-                                                    Text(
-                                                      "Langkah ${numberStep.value[index]}",
-                                                      style: const TextStyle(
-                                                        fontSize: 16,
-                                                        fontWeight:
-                                                            FontWeight.w600,
-                                                      ),
-                                                    ),
-                                                    const SizedBox(
-                                                      height: 8,
-                                                    ),
-                                                    const Expanded(
-                                                      child: TextField(
-                                                        maxLines: 5,
-                                                        cursorColor:
-                                                            Colors.white,
-                                                        decoration:
-                                                            InputDecoration(
-                                                          hintText:
-                                                              "Penjelasan Langkah 1 ...",
-                                                          contentPadding:
-                                                              EdgeInsets
-                                                                  .symmetric(
-                                                                      vertical:
-                                                                          8,
-                                                                      horizontal:
-                                                                          8),
-                                                          isDense: true,
-                                                          hintStyle: TextStyle(
-                                                            fontSize: 12,
-                                                          ),
-                                                          border:
-                                                              OutlineInputBorder(
-                                                            borderSide:
-                                                                BorderSide(
-                                                              color:
-                                                                  Colors.white,
-                                                            ),
-                                                          ),
-                                                          enabledBorder:
-                                                              OutlineInputBorder(
-                                                            borderSide:
-                                                                BorderSide(
-                                                              color:
-                                                                  Colors.white,
-                                                              width: 0.5,
-                                                            ),
-                                                          ),
-                                                          focusedBorder:
-                                                              OutlineInputBorder(
-                                                            borderSide:
-                                                                BorderSide(
-                                                              color:
-                                                                  Colors.white,
-                                                              width: 0.5,
-                                                            ),
-                                                          ),
-                                                        ),
-                                                      ),
-                                                    ),
-                                                    const SizedBox(
-                                                      height: 8,
-                                                    ),
-                                                  ],
-                                                ),
-                                              ),
-                                              const SizedBox(
-                                                width: 8,
-                                              ),
-                                              Container(
-                                                decoration: BoxDecoration(
-                                                  color: CustomColor
-                                                      .primaryButtonColor,
-                                                  borderRadius:
-                                                      BorderRadius.circular(
-                                                    5,
-                                                  ),
-                                                ),
-                                                height: 80,
-                                                width: 120,
-                                              ),
-                                            ],
-                                          ),
-                                        ),
-                                      ),
+                            children: currentSteps
+                                .mapIndexed((e, index) => [
+                                      StepsWidget(step: e, index: index),
                                       const SizedBox(
                                         height: 15,
                                       )
-                                    ]).expand((element) => element).toList())),
+                                    ])
+                                .expand((element) => element)
+                                .toList())),
                     Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 20.0),
                       child: ElevatedButton(
                           onPressed: () {
-                            numberStep.value = [
-                              ...(numberStep.value),
-                              (numberStep.value.length + 1)
-                            ];
+                            ref
+                                .read(currentStepProvider.notifier)
+                                .addStepPlaceHolder();
                           },
                           child: Row(
                             mainAxisAlignment: MainAxisAlignment.center,
@@ -492,6 +446,138 @@ class CreateRecipe extends HookWidget {
       ),
     );
   }
+}
+
+class StepsWidget extends HookConsumerWidget {
+  final Steps step;
+  final int index;
+  const StepsWidget({
+    super.key,
+    required this.step,
+    required this.index,
+  });
+
+  @override
+  Widget build(BuildContext context, ref) {
+    final controller = useTextEditingController();
+    useEffect(() {
+      controller.text = step.desc;
+      return;
+    }, []);
+    return InkWell(
+      onTap: () {
+        ref.read(currentStepProvider.notifier).removeStep(id: step.id);
+      },
+      child: Container(
+        height: 120,
+        decoration: BoxDecoration(
+          color: CustomColor.backgroundDetail,
+          borderRadius: BorderRadius.circular(5),
+        ),
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
+        child: Row(
+          children: [
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    "Langkah ${index + 1}",
+                    style: const TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  const SizedBox(
+                    height: 8,
+                  ),
+                  Expanded(
+                    child: TextField(
+                      controller: controller,
+                      maxLines: 5,
+                      onChanged: (value) => ref
+                          .read(currentStepProvider.notifier)
+                          .updateStep(
+                              content: value,
+                              picture: step.fileUrl,
+                              id: step.id,
+                              file: step.file),
+                      cursorColor: Colors.white,
+                      decoration: InputDecoration(
+                        hintText: "Penjelasan Langkah ${index + 1} ...",
+                        contentPadding: const EdgeInsets.symmetric(
+                            vertical: 8, horizontal: 8),
+                        isDense: true,
+                        hintStyle: const TextStyle(
+                          fontSize: 12,
+                        ),
+                        border: const OutlineInputBorder(
+                          borderSide: BorderSide(
+                            color: Colors.white,
+                          ),
+                        ),
+                        enabledBorder: const OutlineInputBorder(
+                          borderSide: BorderSide(
+                            color: Colors.white,
+                            width: 0.5,
+                          ),
+                        ),
+                        focusedBorder: const OutlineInputBorder(
+                          borderSide: BorderSide(
+                            color: Colors.white,
+                            width: 0.5,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(
+                    height: 8,
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(
+              width: 8,
+            ),
+            AnimatedButton(
+              onTap: () async {
+                final file = await pickImage(source: ImageSource.camera);
+                ref.read(currentStepProvider.notifier).updateStep(
+                    content: step.desc,
+                    picture: step.fileUrl,
+                    id: step.id,
+                    file: file);
+              },
+              child: Container(
+                decoration: BoxDecoration(
+                  color: CustomColor.primaryButtonColor,
+                  borderRadius: BorderRadius.circular(
+                    5,
+                  ),
+                ),
+                height: 80,
+                width: 120,
+                child: step.file != null ? Image.file(step.file!) : null,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+Future<File?> pickImage({required ImageSource source}) async {
+  final picker = ImagePicker();
+
+// Pick an image.
+  final image = await picker.pickImage(source: source);
+  if (image == null) {
+    return null;
+  }
+
+  return File(image.path);
 }
 
 class AddIngredientToAll extends HookConsumerWidget {
@@ -532,7 +618,8 @@ class AddIngredientToAll extends HookConsumerWidget {
                         const SnackBar(content: Text("Nama harus diisi")));
                     return;
                   }
-                  if (shelfTimeController.text.isEmpty) {
+                  if (shelfTimeController.text.isEmpty ||
+                      num.parse(shelfTimeController.text) <= 0) {
                     snackbarKey.currentState?.showSnackBar(const SnackBar(
                         content: Text("Shelf Time harus diisi")));
                     return;
@@ -668,11 +755,6 @@ class AddNewIngredient extends HookConsumerWidget {
                   ref.read(indexCreateProvider.notifier).update((state) => 0);
                 },
                 child: const Text("Kembali")),
-            const SizedBox(
-              width: 5,
-            ),
-            ElevatedButton(
-                onPressed: () {}, child: const Text("Tambah Bahan Makanan")),
           ],
         ),
         const SizedBox(
@@ -839,6 +921,11 @@ class QuantityDialog extends HookConsumerWidget {
                 Expanded(
                     child: ElevatedButton(
                         onPressed: () {
+                          if (controller.text.isEmpty ||
+                              num.parse(controller.text) < 0) {
+                            showToast(message: "Kuantitas Tidak Boleh Kosong");
+                            return;
+                          }
                           ref
                               .read(currRecipeIngredientProvider.notifier)
                               .addIngredients(
@@ -847,7 +934,7 @@ class QuantityDialog extends HookConsumerWidget {
                                       name: name,
                                       quantity: num.parse(controller.text),
                                       unit: unit));
-                          log(controller.text);
+
                           Navigator.pop(context);
                         },
                         child: const Text("Tambah"))),
@@ -997,10 +1084,14 @@ class TambahBahanButton extends ConsumerWidget {
 class RecipeTextField extends StatelessWidget {
   final TextEditingController? controller;
   final String label;
+  final TextInputType? keyboardType;
+  final List<TextInputFormatter> inputFormatters;
   const RecipeTextField({
     Key? key,
     this.controller,
     required this.label,
+    this.keyboardType,
+    this.inputFormatters = const [],
   }) : super(key: key);
 
   @override
@@ -1014,6 +1105,8 @@ class RecipeTextField extends StatelessWidget {
         ),
         TextField(
           controller: controller,
+          inputFormatters: inputFormatters,
+          keyboardType: keyboardType,
           decoration: const InputDecoration(
             filled: true,
             isDense: true,
@@ -1216,4 +1309,14 @@ class OnTapChild extends StatelessWidget {
       ),
     );
   }
+}
+
+showToast({required String message}) {
+  snackbarKey.currentState?.removeCurrentSnackBar();
+  snackbarKey.currentState?.showSnackBar(
+    SnackBar(
+      content: Text(message),
+      behavior: SnackBarBehavior.floating,
+    ),
+  );
 }

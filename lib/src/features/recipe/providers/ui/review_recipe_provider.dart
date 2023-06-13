@@ -10,6 +10,6 @@ class ReviewRecipe extends _$ReviewRecipe {
   }
 
   toggle() {
-    state = true;
+    state = !state;
   }
 }

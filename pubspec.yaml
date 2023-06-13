@@ -44,10 +44,13 @@ dependencies:
   dotted_border: ^2.0.0+3
   firebase_core: ^2.13.1
   firebase_database: ^10.2.2
-  cloud_firestore: ^4.8.0
+  
   uuid: ^3.0.7
   firebase_auth: ^4.6.2
   collection: ^1.17.0
+  firebase_storage: ^11.2.2
+  image_picker: ^0.8.8
+  carousel_slider: ^4.2.1
 
 dev_dependencies:
   flutter_test:
