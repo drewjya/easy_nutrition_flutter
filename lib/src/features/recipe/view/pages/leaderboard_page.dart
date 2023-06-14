@@ -1,5 +1,7 @@
 import 'package:easy_nutrition/src/core/core.dart';
+import 'package:easy_nutrition/src/features/features.dart';
 import 'package:easy_nutrition/src/features/recipe/providers/user_provider.dart';
+import 'package:easy_nutrition/src/features/recipe/view/pages/profile_page.dart';
 import 'package:flutter/material.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 
@@ -8,6 +10,7 @@ class LeaderboardPage extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, ref) {
+    final recipeList = ref.watch(recipeProvider).asData?.value ?? [];
     return Container(
       height: MediaQuery.of(context).size.height * 0.95,
       decoration: BoxDecoration(
@@ -63,6 +66,28 @@ class LeaderboardPage extends ConsumerWidget {
                   ),
                   ...ref.watch(userProvider).maybeWhen(
                     data: (data) {
+                      data.sort(
+                        (a, b) {
+                          final acount =
+                              recipeList.fold(0.0, (previousValue, element) {
+                            if (element.authorId == a.id) {
+                              return element.rating * element.totalLikes +
+                                  previousValue;
+                            }
+                            return previousValue;
+                          });
+                          final bcount =
+                              recipeList.fold(0.0, (previousValue, element) {
+                            if (element.authorId == b.id) {
+                              return element.rating * element.totalLikes +
+                                  previousValue;
+                            }
+                            return previousValue;
+                          });
+
+                          return bcount.compareTo(acount);
+                        },
+                      );
                       return [
                         for (var i = 0; i < data.length; i++)
                           Column(
@@ -80,13 +105,94 @@ class LeaderboardPage extends ConsumerWidget {
                                   Expanded(
                                     flex: 3,
                                     child: Center(
-                                        child: Text("${data[i].totalPoint}")),
+                                        child: Builder(builder: (context) {
+                                      final count = recipeList.fold(0.0,
+                                          (previousValue, element) {
+                                        if (element.authorId == data[i].id) {
+                                          return element.rating *
+                                                  element.totalLikes +
+                                              previousValue;
+                                        }
+                                        return previousValue;
+                                      });
+
+                                      return Text("${count.toInt()}");
+                                    })),
                                   ),
                                   Expanded(
                                     flex: 3,
                                     child: Center(
                                       child: ElevatedButton(
-                                        onPressed: () {},
+                                        onPressed: () {
+                                          final currUser = ref
+                                              .watch(currUserProvider)
+                                              .asData
+                                              ?.value;
+                                          if (currUser == null) {
+                                            showToast(
+                                                message:
+                                                    "Silahkan Login Terlebih Dahulu");
+                                            return;
+                                          }
+                                          if (currUser.id == data[i].id) {
+                                            ref
+                                                .read(selectedDropdownProvider
+                                                    .notifier)
+                                                .restart();
+
+                                            if (ref
+                                                .read(detailActivateProvider)) {
+                                              ref
+                                                  .read(detailActivateProvider
+                                                      .notifier)
+                                                  .back();
+                                            }
+                                            Navigator.pushAndRemoveUntil(
+                                                context,
+                                                PageRouteBuilder(
+                                                  pageBuilder: (context,
+                                                          animation1,
+                                                          animation2) =>
+                                                      const HomeView(),
+                                                  transitionDuration:
+                                                      Duration.zero,
+                                                  reverseTransitionDuration:
+                                                      Duration.zero,
+                                                ),
+                                                (route) => false);
+
+                                            ref
+                                                .read(navLinkProviderProvider
+                                                    .notifier)
+                                                .changeIndex(2);
+                                            return;
+                                          }
+                                          ref
+                                              .read(selectedDropdownProvider
+                                                  .notifier)
+                                              .restart();
+
+                                          if (ref
+                                              .read(detailActivateProvider)) {
+                                            ref
+                                                .read(detailActivateProvider
+                                                    .notifier)
+                                                .back();
+                                          }
+                                          Navigator.pushAndRemoveUntil(
+                                              context,
+                                              PageRouteBuilder(
+                                                pageBuilder: (context,
+                                                        animation1,
+                                                        animation2) =>
+                                                    ProfilePage(user: data[i]),
+                                                transitionDuration:
+                                                    Duration.zero,
+                                                reverseTransitionDuration:
+                                                    Duration.zero,
+                                              ),
+                                              (route) => false);
+                                        },
                                         child: const Text("Lihat Profile"),
                                       ),
                                     ),

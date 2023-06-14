@@ -1,5 +1,4 @@
 import 'dart:convert';
-import 'dart:developer';
 
 import 'package:easy_nutrition/src/features/features.dart';
 import 'package:easy_nutrition/src/features/recipe/providers/user_provider.dart';
@@ -62,10 +61,8 @@ class CurrRecipeIngredient extends AutoDisposeNotifier<List<IngredientRecipe>> {
     for (var i = 0; i < recipeIngredients.length; i++) {
       if (recipeIngredients[i] == ingredients.ingredientId) {
         isContained = true;
-        log("$ingredients");
-        log("${newState[i]}");
+
         newState[i] = ingredients;
-        log("${newState[i]}");
 
         break;
       }
@@ -83,6 +80,10 @@ class CurrRecipeIngredient extends AutoDisposeNotifier<List<IngredientRecipe>> {
     state = [];
     newState.removeWhere((element) => element.ingredientId == ingredientId);
     state = newState;
+  }
+
+  addList(List<IngredientRecipe> ingredient) {
+    state = ingredient;
   }
 }
 

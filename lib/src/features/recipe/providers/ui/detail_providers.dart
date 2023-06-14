@@ -29,6 +29,10 @@ class SelectedDropdown extends _$SelectedDropdown {
     return [];
   }
 
+  restart() {
+    state = [];
+  }
+
   onSelect(String value) {
     final prevState = state;
     if (state.contains(value)) {
@@ -40,5 +44,9 @@ class SelectedDropdown extends _$SelectedDropdown {
       state = [];
       state = {...prevState, value}.toList();
     }
+  }
+
+  onList(List<String> value) {
+    state = value;
   }
 }

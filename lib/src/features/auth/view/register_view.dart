@@ -13,6 +13,7 @@ class RegisterView extends HookConsumerWidget {
     final emailController = useTextEditingController();
     final passwordController = useTextEditingController();
     final fullnameController = useTextEditingController();
+    final isPressed = useState(false);
 
     ref.listen(authProvider, (previous, next) {
       next.maybeWhen(
@@ -24,6 +25,12 @@ class RegisterView extends HookConsumerWidget {
                 builder: (context) => const HomeView(),
               ),
               (route) => false);
+        },
+        error: (error, stackTrace) {
+          if (isPressed.value) {
+            Navigator.pop(context);
+          }
+          showToast(message: "$error");
         },
       );
     });
@@ -68,7 +75,10 @@ class RegisterView extends HookConsumerWidget {
                         height: 8,
                       ),
                       AuthTextField(
-                          controller: passwordController, label: "Password"),
+                        controller: passwordController,
+                        label: "Password",
+                        isPassword: true,
+                      ),
                       const SizedBox(
                         height: 38,
                       ),
@@ -79,11 +89,13 @@ class RegisterView extends HookConsumerWidget {
                           height: 30,
                           child: ElevatedButton(
                             onPressed: () {
+                              showLoadingDialog(context: context);
                               ref.read(authProvider.notifier).createAccount(
                                     email: emailController.text,
                                     password: passwordController.text,
                                     fullName: fullnameController.text,
                                   );
+                              isPressed.value = true;
                             },
                             child: const Center(
                               child: Text(

@@ -13,11 +13,14 @@ class RecipeNotifier extends StreamNotifier<List<RecipeModel>> {
   final _uuid = const Uuid();
   @override
   Stream<List<RecipeModel>> build() {
-    return FirebaseDatabase.instance.ref("recipe").onValue.map((event) => event
-        .snapshot.children
-        .map((e) => RecipeModel.fromMap(
-            jsonDecode(jsonEncode(e.value)) as Map<String, dynamic>))
-        .toList());
+    return FirebaseDatabase.instance
+        .ref("recipe")
+        .onValue
+        .map((event) => event.snapshot.children.map((e) {
+              log("${e.value}");
+              return RecipeModel.fromMap(
+                  jsonDecode(jsonEncode(e.value)) as Map<String, dynamic>);
+            }).toList());
   }
 
   Future createRecipe({
@@ -29,6 +32,7 @@ class RecipeNotifier extends StreamNotifier<List<RecipeModel>> {
     required List<IngredientRecipe> ingredientRecipe,
     required num timeNeeded,
     required String timeFormat,
+    required String recipeId,
   }) async {
     final auth = this.ref.read(currUserProvider).asData?.value;
     if (auth == null) {
@@ -59,10 +63,9 @@ class RecipeNotifier extends StreamNotifier<List<RecipeModel>> {
         Steps(desc: oldSteps[i].desc, fileUrl: stepsUrl, id: ""),
       ];
     }
-    log("${stepsData.map((e) => e.toMap()).toList()}");
 
     final recipeModel = RecipeModel(
-        id: _uuid.v4(),
+        id: recipeId,
         recipeName: name,
         authorId: auth.id,
         authorName: auth.name,
@@ -81,9 +84,49 @@ class RecipeNotifier extends StreamNotifier<List<RecipeModel>> {
     await ref.set(recipeModel.toMap());
   }
 
-  Future updateRecipe({required RecipeModel recipeModel}) async {
+  Future updateRecipe(
+      {required RecipeModel recipeModel, required File? file}) async {
+    String recipeUrl = recipeModel.fileUrl;
+    if (file != null) {
+      final refStorage = FirebaseStorage.instance
+          .ref()
+          .child('recipe')
+          .child('${_uuid.v4()}.jpg');
+      await refStorage.putFile(file);
+      recipeUrl = await refStorage.getDownloadURL();
+    }
+
+    final oldSteps = recipeModel.steps;
+
+    List<Steps> stepsData = [];
+
+    for (var i = 0; i < oldSteps.length; i++) {
+      if (oldSteps[i].file != null) {
+        final refStorage = FirebaseStorage.instance
+            .ref()
+            .child('Data')
+            .child('${_uuid.v4()}.jpg');
+        await refStorage.putFile(oldSteps[i].file!);
+        final stepsUrl = await refStorage.getDownloadURL();
+        stepsData = [
+          ...stepsData,
+          Steps(desc: oldSteps[i].desc, fileUrl: stepsUrl, id: ""),
+        ];
+      } else {
+        stepsData = [
+          ...stepsData,
+          Steps(desc: oldSteps[i].desc, fileUrl: oldSteps[i].fileUrl, id: ""),
+        ];
+      }
+    }
+
     final ref = FirebaseDatabase.instance.ref("recipe/${recipeModel.id}");
-    await ref.update(recipeModel.toMap());
+    await ref.update(recipeModel
+        .copyWith(
+          steps: stepsData,
+          fileUrl: recipeUrl,
+        )
+        .toMap());
   }
 
   Future deleteRecipe({required RecipeModel recipeModel}) async {
@@ -120,7 +163,10 @@ class StepsNotifier extends AutoDisposeNotifier<List<Steps>> {
     var data = <Steps>[];
     for (var item in state) {
       if (item.id == id) {
-        data = [...data, Steps(desc: content, fileUrl: "", id: id, file: file)];
+        data = [
+          ...data,
+          Steps(desc: content, fileUrl: picture, id: id, file: file)
+        ];
       } else {
         data = [...data, item];
       }
@@ -133,6 +179,10 @@ class StepsNotifier extends AutoDisposeNotifier<List<Steps>> {
     newState.removeWhere((element) => element.id == id);
     state = [];
     state = newState;
+  }
+
+  listSteps(List<Steps> steps) {
+    state = steps.map((e) => e.copyWith(id: id.v4())).toList();
   }
 }
 

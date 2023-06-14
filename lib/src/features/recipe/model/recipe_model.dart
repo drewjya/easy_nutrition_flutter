@@ -68,6 +68,7 @@ class SavedIngredients {
 class User {
   final String id;
   final String name;
+  final String desc;
   final List<String> createdRecipe;
   final List<String> favoriteRecipe;
   final List<SavedIngredients> savedIngredients;
@@ -77,6 +78,7 @@ class User {
   User({
     required this.id,
     required this.name,
+    required this.desc,
     required this.createdRecipe,
     required this.favoriteRecipe,
     required this.savedIngredients,
@@ -94,6 +96,7 @@ class User {
     int? totalPoint,
     DateTime? tanggalJoin,
     String? profileUrl,
+    String? desc,
   }) {
     return User(
       id: id ?? this.id,
@@ -104,6 +107,7 @@ class User {
       totalPoint: totalPoint ?? this.totalPoint,
       tanggalJoin: tanggalJoin ?? this.tanggalJoin,
       profileUrl: profileUrl ?? this.profileUrl,
+      desc: desc ?? this.desc,
     );
   }
 
@@ -117,23 +121,23 @@ class User {
       'totalPoint': totalPoint,
       'tanggalJoin': tanggalJoin.millisecondsSinceEpoch,
       'profileUrl': profileUrl,
+      'desc': desc,
     };
   }
 
   factory User.fromMap(Map<String, dynamic> map) {
     return User(
+      desc: map["desc"] ?? "",
       savedIngredients: loadFromNullable(map["savedIngredients"])
           .cast<Map<String, dynamic>>()
           .map((e) => SavedIngredients.fromMap(e))
           .toList(),
       id: map['id'] as String,
       name: map['name'] as String,
-      createdRecipe: List<String>.from(map['createdRecipe'] != null
-          ? map['createdRecipe'] as List<String>
-          : []),
-      favoriteRecipe: List<String>.from(map['favoriteRecipe'] != null
-          ? map['favoriteRecipe'] as List<String>
-          : []),
+      createdRecipe: List<String>.from(
+          map['createdRecipe'] != null ? map['createdRecipe'] as List : []),
+      favoriteRecipe: List<String>.from(
+          map['favoriteRecipe'] != null ? map['favoriteRecipe'] as List : []),
       totalPoint: map['totalPoint'] as int,
       profileUrl: map["profileUrl"] as String?,
       tanggalJoin: DateTime.fromMillisecondsSinceEpoch(map['tanggalJoin']),
@@ -147,7 +151,7 @@ class User {
 
   @override
   String toString() {
-    return 'User(id: $id, name: $name, createdRecipe: $createdRecipe, favoriteRecipe: $favoriteRecipe, savedIngredients: $savedIngredients, totalPoint: $totalPoint, tanggalJoin: $tanggalJoin, profileUrl: $profileUrl)';
+    return 'User(id: $id, name: $name, desc: $desc, createdRecipe: $createdRecipe, favoriteRecipe: $favoriteRecipe, savedIngredients: $savedIngredients, totalPoint: $totalPoint, tanggalJoin: $tanggalJoin, profileUrl: $profileUrl)';
   }
 
   @override

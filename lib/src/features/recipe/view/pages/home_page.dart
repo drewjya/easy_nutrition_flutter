@@ -1,4 +1,5 @@
 // ignore_for_file: public_member_api_docs, sort_constructors_first
+import 'package:easy_nutrition/src/features/recipe/providers/user_provider.dart';
 import 'package:easy_nutrition/src/src.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
@@ -8,6 +9,24 @@ final currentRecipeProvider = StateProvider.autoDispose<RecipeModel?>((ref) {
   return null;
 });
 
+extension IterX<T> on Iterable<T> {
+  T? firstOrNull(bool Function(T element) map) {
+    final data = where(map).toList();
+    if (data.isEmpty) {
+      return null;
+    }
+    return data.first;
+  }
+
+  T? lastOrNull(bool Function(T element) map) {
+    final data = where(map).toList();
+    if (data.isEmpty) {
+      return null;
+    }
+    return data.last;
+  }
+}
+
 class HomePage extends HookConsumerWidget {
   const HomePage({super.key});
   @override
@@ -15,6 +34,7 @@ class HomePage extends HookConsumerWidget {
     final GlobalKey<ScaffoldState> scaffoldKey =
         useMemoized(() => GlobalKey<ScaffoldState>());
     final recipe = ref.watch(currentRecipeProvider);
+
     return GestureDetector(
       onTap: () {
         FocusManager.instance.primaryFocus?.unfocus();
@@ -26,9 +46,13 @@ class HomePage extends HookConsumerWidget {
         endDrawer: Drawer(
           backgroundColor: CustomColor.primaryBackgroundColor,
           child: Consumer(builder: (context, ref, child) {
+            final user = ref.watch(userProvider).asData?.value ?? [];
             if (recipe == null) {
-              return SizedBox();
+              return const SizedBox();
             }
+            final authorName = user
+                .firstOrNull((element) => element.id == recipe.authorId)
+                ?.name;
             return ListView(
               padding: const EdgeInsets.symmetric(horizontal: 16),
               children: <Widget>[
@@ -39,19 +63,24 @@ class HomePage extends HookConsumerWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       const Spacer(),
-                      InkWell(
-                          borderRadius: BorderRadius.circular(50),
-                          onTap: () {
-                            Navigator.pop(context);
-                          },
-                          child: const Icon(
-                            Icons.arrow_back_sharp,
-                            color: Colors.white,
-                          )),
+                      Row(
+                        children: [
+                          InkWell(
+                            borderRadius: BorderRadius.circular(50),
+                            onTap: () {
+                              Navigator.pop(context);
+                            },
+                            child: const Icon(
+                              Icons.arrow_back_sharp,
+                              color: Colors.white,
+                            ),
+                          ),
+                        ],
+                      ),
                       const Spacer(),
                       Text(
                         recipe.recipeName,
-                        style: TextStyle(
+                        style: const TextStyle(
                           fontSize: 28,
                           fontWeight: FontWeight.w600,
                         ),
@@ -60,8 +89,8 @@ class HomePage extends HookConsumerWidget {
                         height: 10,
                       ),
                       Text(
-                        'By ${recipe.authorName}',
-                        style: TextStyle(
+                        'By $authorName',
+                        style: const TextStyle(
                           color: CustomColor.borderTextField,
                           fontSize: 14,
                           fontWeight: FontWeight.w600,
@@ -78,9 +107,9 @@ class HomePage extends HookConsumerWidget {
                 ),
                 ...recipe.ingredientList
                     .map((e) => [
-                          const CardIngredientsDrawer(
-                            ingredients: "2 pcs",
-                            name: 'Ayam',
+                          CardIngredientsDrawer(
+                            ingredients: "${e.quantity} ${e.unit}",
+                            name: e.name,
                           ),
                           const SizedBox(
                             height: 5,
@@ -134,15 +163,30 @@ class HomePage extends HookConsumerWidget {
                     height: 5,
                   ),
                   Row(
-                    children: const [
-                      Text(
+                    children: [
+                      const Text(
                         "Choose Dishes",
                         style: TextStyle(fontSize: 20),
                       ),
-                      Spacer(),
-                      CustomDropdownButton(
-                        label: "Semua Kategori",
-                      ),
+                      const Spacer(),
+                      Consumer(builder: (context, ref, child) {
+                        final selectedDropdown =
+                            ref.watch(selectedDropdownProvider);
+
+                        String label;
+                        if (selectedDropdown.isEmpty) {
+                          label = "Semua Kategori";
+                        } else {
+                          final count = ((selectedDropdown.length - 1) == 0)
+                              ? ""
+                              : "+${selectedDropdown.length - 1}";
+
+                          label = "${selectedDropdown.first}$count";
+                        }
+                        return CustomDropdownButton(
+                          label: label,
+                        );
+                      }),
                     ],
                   ),
                   const SizedBox(
@@ -176,6 +220,21 @@ class HomeRecipeContent extends ConsumerWidget {
   Widget build(BuildContext context, ref) {
     return ref.watch(recipeProvider).when(
           data: (data) {
+            final dropdown = ref.watch(selectedDropdownProvider);
+
+            data = data.where((element) {
+              if (dropdown.isEmpty) {
+                return true;
+              }
+              for (var item in element.categoriesList) {
+                final contains = dropdown.contains(item);
+                if (contains) {
+                  return true;
+                }
+              }
+              return false;
+            }).toList();
+
             return ListView(
               children: [
                 const SizedBox(
@@ -260,7 +319,7 @@ class CardIngredientsDrawer extends StatelessWidget {
   }
 }
 
-class RecipeCard extends StatelessWidget {
+class RecipeCard extends StatefulWidget {
   final VoidCallback? onTap;
   final RecipeModel recipe;
   const RecipeCard({
@@ -269,6 +328,11 @@ class RecipeCard extends StatelessWidget {
     required this.recipe,
   }) : super(key: key);
 
+  @override
+  State<RecipeCard> createState() => _RecipeCardState();
+}
+
+class _RecipeCardState extends State<RecipeCard> {
   @override
   Widget build(BuildContext context) {
     return SizedBox(
@@ -296,9 +360,9 @@ class RecipeCard extends StatelessWidget {
                     width: 170,
                     child: Center(
                       child: Text(
-                        recipe.recipeName,
+                        widget.recipe.recipeName,
                         maxLines: 2,
-                        style: TextStyle(
+                        style: const TextStyle(
                           fontWeight: FontWeight.w700,
                           fontSize: 16,
                         ),
@@ -307,7 +371,8 @@ class RecipeCard extends StatelessWidget {
                       ),
                     ),
                   ),
-                  Text("${recipe.timeNeeded} ${recipe.timeFormat}"),
+                  Text(
+                      "${widget.recipe.timeNeeded} ${widget.recipe.timeFormat}"),
                   const SizedBox(
                     height: 6,
                   ),
@@ -316,7 +381,7 @@ class RecipeCard extends StatelessWidget {
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        ...recipe.ingredientList.take(2).map(
+                        ...widget.recipe.ingredientList.take(2).map(
                             (e) => Text("${e.name} ${e.quantity} ${e.unit}")),
                       ],
                     ),
@@ -325,7 +390,7 @@ class RecipeCard extends StatelessWidget {
                     height: 16,
                   ),
                   ElevatedButton(
-                      onPressed: onTap,
+                      onPressed: widget.onTap,
                       child: const Padding(
                         padding: EdgeInsets.all(12.0),
                         child: Center(child: Text("Cook Now")),
@@ -336,16 +401,51 @@ class RecipeCard extends StatelessWidget {
           ),
           Align(
             alignment: Alignment.topCenter,
-            child: Container(
-              height: 140,
-              width: 140,
-              decoration: BoxDecoration(
-                color: Colors.grey,
-                borderRadius: BorderRadius.circular(100),
-                image: DecorationImage(
-                  image: NetworkImage(recipe.fileUrl),
+            child: Stack(
+              children: [
+                Container(
+                  height: 140,
+                  width: 140,
+                  decoration: BoxDecoration(
+                    color: Colors.grey,
+                    borderRadius: BorderRadius.circular(100),
+                    image: DecorationImage(
+                      image: NetworkImage(widget.recipe.fileUrl),
+                    ),
+                  ),
                 ),
-              ),
+                Positioned(
+                  bottom: 5,
+                  right: 10,
+                  child: Consumer(
+                    builder: (context, ref, child) {
+                      final favorited = ref
+                              .watch(currUserProvider)
+                              .asData
+                              ?.value
+                              ?.favoriteRecipe ??
+                          [];
+
+                      final isFavorite = favorited.contains(widget.recipe.id);
+                      return InkWell(
+                        borderRadius: BorderRadius.circular(50),
+                        onTap: () {
+                          ref.read(currUserProvider.notifier).likeDislike(
+                              recipeId: widget.recipe.id,
+                              favorite: !isFavorite);
+                          setState(() {});
+                        },
+                        child: Icon(
+                          isFavorite
+                              ? Icons.favorite
+                              : Icons.favorite_outline_outlined,
+                          color: isFavorite ? Colors.pink : Colors.white,
+                        ),
+                      );
+                    },
+                  ),
+                )
+              ],
             ),
           )
         ],
@@ -410,19 +510,17 @@ class SearchTextField extends HookWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isEnabled = useState(false);
-
     return GestureDetector(
       onTap: () {
-        isEnabled.value = true;
+        onTap?.call();
       },
       child: TextField(
         controller: controller,
         onChanged: onChanged,
         cursorColor: Colors.white,
-        onTap: onTap,
+        onTap: null,
         autofocus: false,
-        enabled: isEnabled.value,
+        enabled: false,
         decoration: InputDecoration(
           contentPadding: const EdgeInsets.all(8),
           filled: true,

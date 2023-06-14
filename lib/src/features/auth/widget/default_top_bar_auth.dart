@@ -15,11 +15,24 @@ class DefaultTopBarAuth extends StatelessWidget {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        const Text(
-          "EasyNutrition",
-          style: TextStyle(
-            fontSize: 20,
-            fontWeight: FontWeight.w600,
+        GestureDetector(
+          onTap: () {
+            Navigator.pushAndRemoveUntil(
+                context,
+                PageRouteBuilder(
+                  pageBuilder: (context, animation1, animation2) =>
+                      const HomeView(),
+                  transitionDuration: Duration.zero,
+                  reverseTransitionDuration: Duration.zero,
+                ),
+                (route) => false);
+          },
+          child: const Text(
+            "EasyNutrition",
+            style: TextStyle(
+              fontSize: 20,
+              fontWeight: FontWeight.w600,
+            ),
           ),
         ),
         TextButton(

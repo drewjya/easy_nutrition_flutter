@@ -1,10 +1,12 @@
-// ignore_for_file: public_member_api_docs, sort_constructors_first
 import 'dart:developer';
 import 'dart:io';
 import 'dart:math' as math;
 
+import 'package:adaptive_dialog/adaptive_dialog.dart';
 import 'package:easy_nutrition/main.dart';
 import 'package:easy_nutrition/src/features/recipe/providers/ingredients_provider.dart';
+import 'package:easy_nutrition/src/features/recipe/providers/user_provider.dart';
+import 'package:easy_nutrition/src/features/recipe/view/pages/edit_recipe.dart';
 import 'package:easy_nutrition/src/src.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -65,8 +67,10 @@ class CreateRecipe extends HookWidget {
     final namaController = useTextEditingController();
     final kaloriController = useTextEditingController();
     final tabController = useTabController(initialLength: 2);
+    final cookTimeController = useTextEditingController();
+    final cookTimeUnit = useTextEditingController();
 
-    // final selectedCategory = useState(<int,String>{});
+    final file = useState<File?>(null);
 
     return NavLinkWidget(
       body: Container(
@@ -99,6 +103,9 @@ class CreateRecipe extends HookWidget {
                         const Spacer(),
                         ElevatedButton(
                             onPressed: () {
+                              ref
+                                  .read(selectedDropdownProvider.notifier)
+                                  .restart();
                               ref.read(detailActivateProvider.notifier).back();
 
                               Navigator.pushAndRemoveUntil(
@@ -128,6 +135,14 @@ class CreateRecipe extends HookWidget {
                               } else if (kaloriController.text.isEmpty) {
                                 showToast(message: "Kalori Tidak Boleh Kosong");
                                 return;
+                              } else if (cookTimeController.text.isEmpty) {
+                                showToast(
+                                    message: "Waktu Masak Tidak Boleh Kosong");
+                                return;
+                              } else if (cookTimeUnit.text.isEmpty) {
+                                showToast(
+                                    message: "Format Waktu Tidak Boleh Kosong");
+                                return;
                               } else if (ref
                                   .read(selectedDropdownProvider)
                                   .isEmpty) {
@@ -141,6 +156,10 @@ class CreateRecipe extends HookWidget {
                                     message:
                                         "Bahan Masakan Tidak Boleh Kosong");
                                 return;
+                              } else if (file.value == null) {
+                                showToast(
+                                    message: "Gambar Resep Tidak Boleh Kosong");
+                                return;
                               }
                               tabController.animateTo(1);
                             },
@@ -152,6 +171,22 @@ class CreateRecipe extends HookWidget {
                     ),
                     Row(
                       children: [
+                        ImagePickerWidget(
+                          url: "",
+                          file: file.value,
+                          onPicked: (onFile) {
+                            file.value = onFile;
+                          },
+                          child: const Center(
+                            child: Icon(
+                              Icons.restaurant_menu,
+                              color: Colors.white,
+                            ),
+                          ),
+                        ),
+                        const SizedBox(
+                          width: 10,
+                        ),
                         Expanded(
                             child: RecipeTextField(
                           label: "Nama Masakan",
@@ -209,21 +244,54 @@ class CreateRecipe extends HookWidget {
                       height: 15,
                     ),
                     Row(
-                      children: const [
-                        Text(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text(
                           "Bahan Makanan",
                           style: TextStyle(
                             fontSize: 18,
                             fontWeight: FontWeight.w600,
                           ),
                         ),
-                        Spacer(
-                          flex: 12,
+                        const SizedBox(
+                          width: 12,
                         ),
                         Expanded(
-                          flex: 6,
-                          child: SearchTextField(
-                            hintText: "Cari Bahan Makanan",
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.start,
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              const Text("Format Waktu"),
+                              const SizedBox(
+                                height: 4,
+                              ),
+                              CustomTextField(
+                                  margin: 0,
+                                  values: const [
+                                    "minute",
+                                    "hour",
+                                    "day",
+                                  ],
+                                  controller: cookTimeUnit,
+                                  hintText: "",
+                                  onTap: (value) {
+                                    cookTimeUnit.text = value;
+                                  },
+                                  labelText: ""),
+                            ],
+                          ),
+                        ),
+                        const SizedBox(
+                          width: 12,
+                        ),
+                        Expanded(
+                          child: RecipeTextField(
+                            label: "Waktu Masak",
+                            controller: cookTimeController,
+                            keyboardType: TextInputType.number,
+                            inputFormatters: [
+                              DecimalTextInputFormatter(decimalRange: 2)
+                            ],
                           ),
                         ),
                       ],
@@ -348,7 +416,7 @@ class CreateRecipe extends HookWidget {
                           width: 5,
                         ),
                         ElevatedButton(
-                            onPressed: () {
+                            onPressed: () async {
                               if (currentSteps.isEmpty) {
                                 showToast(message: "Steps tidak boleh kosong");
                                 return;
@@ -365,39 +433,70 @@ class CreateRecipe extends HookWidget {
                                           "Gambar Steps Tidak Boleh Kosong");
                                   return;
                                 }
-                                ref.read(recipeProvider.notifier).createRecipe(
+                              }
+
+                              final confirm = await confirmation(
+                                  context: context,
+                                  message:
+                                      "Apakah anda yakin untuk membuat resep ini?");
+                              log("${confirm == OkCancelAlertDefaultType.ok}");
+                              if (confirm == OkCancelResult.ok) {
+                                final id = const Uuid().v4();
+                                showLoadingDialog(context: context);
+                                await ref
+                                    .read(recipeProvider.notifier)
+                                    .createRecipe(
+                                      recipeId: id,
                                       name: namaController.text,
                                       calories:
                                           num.parse(kaloriController.text),
                                       categories:
                                           ref.read(selectedDropdownProvider),
                                       steps: currentSteps,
-                                      recipeFile: currentSteps[0].file!,
+                                      recipeFile:
+                                          file.value ?? currentSteps[0].file!,
                                       ingredientRecipe: ref
                                           .read(currRecipeIngredientProvider),
-                                      timeNeeded: 30,
-                                      timeFormat: "minute",
+                                      timeNeeded:
+                                          num.parse(cookTimeController.text),
+                                      timeFormat: cookTimeUnit.text,
                                     );
+
+                                await ref
+                                    .read(currUserProvider.notifier)
+                                    .createRecipe(recipeId: id);
+                                if (context.mounted) {
+                                  Navigator.pop(context);
+                                  showOkAlertDialog(
+                                          context: context,
+                                          style: AdaptiveStyle.macOS,
+                                          message:
+                                              "Selamat Berhasil Membuat Resep",
+                                          title: "Pesan")
+                                      .then((value) {
+                                    if (ref.read(detailActivateProvider)) {
+                                      ref
+                                          .read(detailActivateProvider.notifier)
+                                          .back();
+                                      ref
+                                          .read(
+                                              selectedDropdownProvider.notifier)
+                                          .restart();
+                                      Navigator.pushAndRemoveUntil(
+                                          context,
+                                          PageRouteBuilder(
+                                            pageBuilder: (context, animation1,
+                                                    animation2) =>
+                                                const HomeView(),
+                                            transitionDuration: Duration.zero,
+                                            reverseTransitionDuration:
+                                                Duration.zero,
+                                          ),
+                                          (route) => false);
+                                    }
+                                  });
+                                }
                               }
-                              showDialog(
-                                context: context,
-                                builder: (context) => AlertDialog(
-                                  content: Container(
-                                    height: 200,
-                                    width: 200,
-                                    decoration: BoxDecoration(
-                                      color: Colors.white,
-                                      borderRadius: BorderRadius.circular(8),
-                                    ),
-                                    child: const Center(
-                                      child: Text(
-                                        "Selamat! Resep Sudah Dibuat",
-                                        style: TextStyle(color: Colors.black),
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                              );
                             },
                             child: const Text("Simpan")),
                       ],
@@ -464,6 +563,8 @@ class StepsWidget extends HookConsumerWidget {
       controller.text = step.desc;
       return;
     }, []);
+    log("$step");
+    log("${controller.text}");
     return InkWell(
       onTap: () {
         ref.read(currentStepProvider.notifier).removeStep(id: step.id);
@@ -558,7 +659,17 @@ class StepsWidget extends HookConsumerWidget {
                 ),
                 height: 80,
                 width: 120,
-                child: step.file != null ? Image.file(step.file!) : null,
+                child: step.file != null
+                    ? Image.file(
+                        step.file!,
+                        fit: BoxFit.cover,
+                      )
+                    : step.fileUrl.isNotEmpty
+                        ? Image.network(
+                            step.fileUrl,
+                            fit: BoxFit.cover,
+                          )
+                        : null,
               ),
             ),
           ],
@@ -571,7 +682,6 @@ class StepsWidget extends HookConsumerWidget {
 Future<File?> pickImage({required ImageSource source}) async {
   final picker = ImagePicker();
 
-// Pick an image.
   final image = await picker.pickImage(source: source);
   if (image == null) {
     return null;
@@ -648,6 +758,7 @@ class AddIngredientToAll extends HookConsumerWidget {
                           shelftUnit: shelfUnitController.text,
                           unit: unitController.text,
                           description: tipsController.text));
+                  ref.read(indexCreateProvider.notifier).update((state) => 1);
                 },
                 child: const Text("Submit")),
           ],
@@ -681,6 +792,7 @@ class AddIngredientToAll extends HookConsumerWidget {
                   ),
                   CustomTextField(
                       values: const [
+                        "minute",
                         "hour",
                         "day",
                         "week",
@@ -918,11 +1030,29 @@ class QuantityDialog extends HookConsumerWidget {
                 const SizedBox(
                   width: 20,
                 ),
+                if (ref
+                    .watch(currRecipeIngredientProvider)
+                    .map((e) => e.ingredientId)
+                    .contains(id))
+                  Expanded(
+                      child: OutlinedButton(
+                          onPressed: () {
+                            ref
+                                .read(currRecipeIngredientProvider.notifier)
+                                .removeIngredients(ingredientId: id);
+                            Navigator.pop(context);
+                          },
+                          child: const Text("Hapus"))),
+                const SizedBox(
+                  width: 20,
+                ),
                 Expanded(
                     child: ElevatedButton(
                         onPressed: () {
+                          final data = num.parse(controller.text);
+                          log("$data");
                           if (controller.text.isEmpty ||
-                              num.parse(controller.text) < 0) {
+                              num.parse(controller.text) <= 0) {
                             showToast(message: "Kuantitas Tidak Boleh Kosong");
                             return;
                           }
@@ -1138,9 +1268,11 @@ class CustomTextField extends StatelessWidget {
   final TextInputType? keyboardType;
   final List<TextInputFormatter> inputFormatters;
   final int? maxLines;
+  final double? margin;
   const CustomTextField({
     Key? key,
     this.controller,
+    this.margin,
     this.onChanged,
     required this.hintText,
     required this.labelText,
@@ -1157,6 +1289,7 @@ class CustomTextField extends StatelessWidget {
       return OnTapField(
         values: values,
         onTap: onTap!,
+        margin: margin,
         controller: controller,
         labelText: labelText,
       );
@@ -1208,12 +1341,14 @@ class OnTapField extends HookWidget {
   final String labelText;
   final Function(String value) onTap;
   final List<String> values;
+  final double? margin;
   const OnTapField({
     Key? key,
     this.controller,
     required this.labelText,
     required this.onTap,
     required this.values,
+    this.margin,
   }) : super(key: key);
 
   @override
@@ -1222,7 +1357,6 @@ class OnTapField extends HookWidget {
     useEffect(() {
       text.value = controller?.text ?? "";
       void func() {
-        log("${controller?.text}");
         text.value = controller?.text ?? "";
       }
 
@@ -1243,8 +1377,10 @@ class OnTapField extends HookWidget {
                 )),
                 color: CustomColor.bodyPrimaryColor,
               ),
-              padding: const EdgeInsets.all(2),
-              margin: const EdgeInsets.only(top: 10),
+              padding: margin != null
+                  ? const EdgeInsets.all(0)
+                  : const EdgeInsets.all(2),
+              margin: EdgeInsets.only(top: margin ?? 10),
               child: Row(
                   children: values
                       .map((e) => Expanded(

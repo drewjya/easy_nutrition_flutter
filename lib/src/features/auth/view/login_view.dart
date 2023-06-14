@@ -13,13 +13,18 @@ class LoginView extends HookConsumerWidget {
   Widget build(BuildContext context, ref) {
     final usernameController = useTextEditingController();
     final passwordController = useTextEditingController();
-    final isMobile = Responsive.isMobile(context);
-    if (isMobile) {
-      return const SizedBox.shrink();
-    }
+    final isPressed = useState(false);
+
     ref.listen(authProvider, (previous, next) {
       next.maybeWhen(
         orElse: () {},
+        error: (error, stackTrace) {
+          if (isPressed.value) {
+            Navigator.pop(context);
+            isPressed.value = false;
+          }
+          showToast(message: "$error");
+        },
         data: (data) {
           Navigator.pushAndRemoveUntil(
               context,
@@ -56,12 +61,14 @@ class LoginView extends HookConsumerWidget {
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       AuthTextField(
-                          controller: usernameController, label: "Username"),
+                          controller: usernameController, label: "Email"),
                       const SizedBox(
                         height: 8,
                       ),
                       AuthTextField(
-                          controller: passwordController, label: "Password"),
+                          controller: passwordController,
+                          label: "Password",
+                          isPassword: true),
                       const SizedBox(
                         height: 38,
                       ),
@@ -72,9 +79,11 @@ class LoginView extends HookConsumerWidget {
                           height: 30,
                           child: ElevatedButton(
                             onPressed: () {
+                              showLoadingDialog(context: context);
                               ref.read(authProvider.notifier).login(
                                   email: usernameController.text,
                                   password: passwordController.text);
+                              isPressed.value = true;
                             },
                             child: const Center(
                               child: Text(
@@ -96,18 +105,25 @@ class LoginView extends HookConsumerWidget {
   }
 }
 
-class AuthTextField extends StatelessWidget {
+class AuthTextField extends HookWidget {
+  final bool isPassword;
   const AuthTextField(
       {super.key,
       required this.label,
+      this.isPassword = false,
       required this.controller,
       this.validator});
   final String label;
+
   final String? Function(String?)? validator;
   final TextEditingController controller;
 
   @override
   Widget build(BuildContext context) {
+    final isShown = useState(false);
+    useEffect(() {
+      isShown.value = isPassword;
+    }, []);
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 24.0),
       child: SizedBox(
@@ -126,23 +142,35 @@ class AuthTextField extends StatelessWidget {
             TextFormField(
               validator: validator,
               controller: controller,
-              decoration: const InputDecoration(
+              obscureText: isShown.value,
+              decoration: InputDecoration(
                 filled: true,
                 isDense: true,
                 fillColor: CustomColor.fillTextField,
-                enabledBorder: OutlineInputBorder(
+                suffixIcon: isPassword
+                    ? GestureDetector(
+                        onTap: () => isShown.value = !isShown.value,
+                        child: Icon(
+                          isShown.value
+                              ? Icons.remove_red_eye
+                              : Icons.remove_red_eye_outlined,
+                          color: Colors.white,
+                        ),
+                      )
+                    : null,
+                enabledBorder: const OutlineInputBorder(
                     borderSide: BorderSide(
                   color: Colors.white,
                 )),
-                border: OutlineInputBorder(
+                border: const OutlineInputBorder(
                     borderSide: BorderSide(
                   color: Colors.white,
                 )),
-                focusedBorder: OutlineInputBorder(
+                focusedBorder: const OutlineInputBorder(
                     borderSide: BorderSide(
                   color: CustomColor.orangeForeground,
                 )),
-                errorBorder: OutlineInputBorder(
+                errorBorder: const OutlineInputBorder(
                     borderSide: BorderSide(
                   color: Colors.red,
                 )),
@@ -153,4 +181,31 @@ class AuthTextField extends StatelessWidget {
       ),
     );
   }
+}
+
+showLoadingDialog({
+  required BuildContext context,
+}) async {
+  showDialog(
+    context: context,
+    barrierDismissible: false,
+    builder: (context) {
+      return WillPopScope(
+        onWillPop: () async => true,
+        child: Center(
+          child: Container(
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              color: Colors.white,
+            ),
+            padding: EdgeInsets.all(4),
+            child: CircularProgressIndicator(
+              backgroundColor: Colors.white,
+              color: CustomColor.primaryBackgroundColor,
+            ),
+          ),
+        ),
+      );
+    },
+  );
 }
