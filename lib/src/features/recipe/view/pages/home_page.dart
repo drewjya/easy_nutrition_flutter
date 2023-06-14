@@ -251,6 +251,13 @@ class HomeRecipeContent extends ConsumerWidget {
                           .map((current) => RecipeCard(
                               recipe: current,
                               onTap: () {
+                                final currUser =
+                                    ref.read(currUserProvider).asData?.value;
+                                if (currUser == null) {
+                                  showToast(
+                                      message: "Harap Login Terlebih Dahulu");
+                                  return;
+                                }
                                 ref
                                     .read(currentRecipeProvider.notifier)
                                     .update((state) => current);
@@ -419,17 +426,18 @@ class _RecipeCardState extends State<RecipeCard> {
                   right: 10,
                   child: Consumer(
                     builder: (context, ref, child) {
-                      final favorited = ref
-                              .watch(currUserProvider)
-                              .asData
-                              ?.value
-                              ?.favoriteRecipe ??
-                          [];
+                      final currUser =
+                          ref.watch(currUserProvider).asData?.value;
+                      final favorited = currUser?.favoriteRecipe ?? [];
 
                       final isFavorite = favorited.contains(widget.recipe.id);
                       return InkWell(
                         borderRadius: BorderRadius.circular(50),
                         onTap: () {
+                          if (currUser == null) {
+                            showToast(message: "Harp Login Terlebih Dahulu");
+                            return;
+                          }
                           ref.read(currUserProvider.notifier).likeDislike(
                               recipeId: widget.recipe.id,
                               favorite: !isFavorite);

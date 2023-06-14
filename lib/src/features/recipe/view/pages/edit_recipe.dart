@@ -9,6 +9,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:flutter/foundation.dart';
 
 class EditRecipePage extends HookConsumerWidget {
   final RecipeModel recipeModel;
@@ -25,7 +26,7 @@ class EditRecipePage extends HookConsumerWidget {
     final currIngredients = ref.watch(currRecipeIngredientProvider);
     final currSteps = ref.watch(currentStepProvider);
     final unitTime = useTextEditingController();
-    final file = useState<File?>(null);
+    final file = useState<Uint8List?>(null);
 
     useEffect(() {
       nameController.text = recipeModel.recipeName;
@@ -510,9 +511,9 @@ class EditRecipeField extends StatelessWidget {
 }
 
 class ImagePickerWidget extends HookConsumerWidget {
-  final File? file;
+  final Uint8List? file;
   final String url;
-  final Function(File? onFile) onPicked;
+  final Function(Uint8List? onFile) onPicked;
   final double? radius;
   final Widget? child;
   const ImagePickerWidget({
@@ -526,10 +527,11 @@ class ImagePickerWidget extends HookConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     ImageProvider<Object>? b;
-    b = (file != null) ? FileImage(file!) : null;
+    b = (file != null) ? MemoryImage(file!) : null;
     b ??= (url.isNotEmpty ? NetworkImage(url) : null);
     return GestureDetector(
       onTap: () async {
+        if(!kIsWeb){
         final choose = await showConfirmationDialog<ImageSource>(
           style: AdaptiveStyle.macOS,
           context: context,
@@ -542,9 +544,18 @@ class ImagePickerWidget extends HookConsumerWidget {
           cancelLabel: "Cancel",
         );
 
+       
         if (choose != null) {
           final filePicked = await pickImage(source: choose);
+          log("$filePicked");
           onPicked(filePicked);
+        }
+
+        }else{
+             final filePicked = await pickImageWeb();
+          log("$filePicked");
+          onPicked(filePicked);
+
         }
       },
       child: CircleAvatar(

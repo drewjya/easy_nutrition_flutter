@@ -568,7 +568,7 @@ class Steps {
   final String desc;
   final String fileUrl;
   final String id;
-  final File? file;
+  final Uint8List? file;
   Steps({
     required this.desc,
     required this.fileUrl,

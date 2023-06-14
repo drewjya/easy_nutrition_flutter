@@ -6,6 +6,7 @@ import 'package:easy_nutrition/src/features/features.dart';
 import 'package:easy_nutrition/src/features/recipe/providers/user_provider.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:firebase_storage/firebase_storage.dart';
+import 'package:flutter/foundation.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:uuid/uuid.dart';
 
@@ -28,7 +29,7 @@ class RecipeNotifier extends StreamNotifier<List<RecipeModel>> {
     required num calories,
     required List<String> categories,
     required List<Steps> steps,
-    required File recipeFile,
+    required Uint8List recipeFile,
     required List<IngredientRecipe> ingredientRecipe,
     required num timeNeeded,
     required String timeFormat,
@@ -42,7 +43,7 @@ class RecipeNotifier extends StreamNotifier<List<RecipeModel>> {
         .ref()
         .child('recipe')
         .child('${_uuid.v4()}.jpg');
-    await refStorage.putFile(recipeFile);
+    await refStorage.putData(recipeFile);
 
     final recipeUrl = await refStorage.getDownloadURL();
 
@@ -55,7 +56,7 @@ class RecipeNotifier extends StreamNotifier<List<RecipeModel>> {
           .ref()
           .child('Data')
           .child('${_uuid.v4()}.jpg');
-      await refStorage.putFile(oldSteps[i].file!);
+      await refStorage.putData(oldSteps[i].file!);
 
       final stepsUrl = await refStorage.getDownloadURL();
       stepsData = [
@@ -85,14 +86,14 @@ class RecipeNotifier extends StreamNotifier<List<RecipeModel>> {
   }
 
   Future updateRecipe(
-      {required RecipeModel recipeModel, required File? file}) async {
+      {required RecipeModel recipeModel, required Uint8List? file}) async {
     String recipeUrl = recipeModel.fileUrl;
     if (file != null) {
       final refStorage = FirebaseStorage.instance
           .ref()
           .child('recipe')
           .child('${_uuid.v4()}.jpg');
-      await refStorage.putFile(file);
+      await refStorage.putData(file);
       recipeUrl = await refStorage.getDownloadURL();
     }
 
@@ -106,7 +107,7 @@ class RecipeNotifier extends StreamNotifier<List<RecipeModel>> {
             .ref()
             .child('Data')
             .child('${_uuid.v4()}.jpg');
-        await refStorage.putFile(oldSteps[i].file!);
+        await refStorage.putData(oldSteps[i].file!);
         final stepsUrl = await refStorage.getDownloadURL();
         stepsData = [
           ...stepsData,
@@ -159,7 +160,7 @@ class StepsNotifier extends AutoDisposeNotifier<List<Steps>> {
       {required String content,
       required String picture,
       required String id,
-      required File? file}) {
+      required Uint8List? file}) {
     var data = <Steps>[];
     for (var item in state) {
       if (item.id == id) {

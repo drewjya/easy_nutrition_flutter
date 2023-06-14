@@ -103,7 +103,7 @@ class LeaderboardPage extends ConsumerWidget {
                                     child: Center(child: Text(data[i].name)),
                                   ),
                                   Expanded(
-                                    flex: 3,
+                                    flex: 4,
                                     child: Center(
                                         child: Builder(builder: (context) {
                                       final count = recipeList.fold(0.0,
@@ -116,7 +116,8 @@ class LeaderboardPage extends ConsumerWidget {
                                         return previousValue;
                                       });
 
-                                      return Text("${count.toInt()}");
+                                      return Center(
+                                          child: Text("${count.toInt()}"));
                                     })),
                                   ),
                                   Expanded(

@@ -1,10 +1,10 @@
 import 'dart:convert';
-import 'dart:io';
 
 import 'package:easy_nutrition/src/features/features.dart';
 import 'package:firebase_auth/firebase_auth.dart' as fb;
 import 'package:firebase_database/firebase_database.dart';
 import 'package:firebase_storage/firebase_storage.dart';
+import 'package:flutter/foundation.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:uuid/uuid.dart';
 
@@ -87,7 +87,7 @@ class CurrentUser extends AsyncNotifier<User?> {
         ));
   }
 
-  uploadPicture(File file) async {
+  uploadPicture(Uint8List file) async {
     final user = state.asData?.value;
 
     if (user == null) {
@@ -99,7 +99,7 @@ class CurrentUser extends AsyncNotifier<User?> {
         .ref()
         .child('profile')
         .child('${uuid.v4()}.jpg');
-    await refStorage.putFile(file);
+    await refStorage.putData(file);
     final getUrl = await refStorage.getDownloadURL();
     if (oldUrl != null) {
       final removeRef = FirebaseStorage.instance.refFromURL(oldUrl);

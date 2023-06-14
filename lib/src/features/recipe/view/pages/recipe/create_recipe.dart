@@ -1,5 +1,4 @@
 import 'dart:developer';
-import 'dart:io';
 import 'dart:math' as math;
 
 import 'package:adaptive_dialog/adaptive_dialog.dart';
@@ -8,6 +7,8 @@ import 'package:easy_nutrition/src/features/recipe/providers/ingredients_provide
 import 'package:easy_nutrition/src/features/recipe/providers/user_provider.dart';
 import 'package:easy_nutrition/src/features/recipe/view/pages/edit_recipe.dart';
 import 'package:easy_nutrition/src/src.dart';
+import 'package:file_picker/file_picker.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
@@ -70,7 +71,7 @@ class CreateRecipe extends HookWidget {
     final cookTimeController = useTextEditingController();
     final cookTimeUnit = useTextEditingController();
 
-    final file = useState<File?>(null);
+    final file = useState<Uint8List?>(null);
 
     return NavLinkWidget(
       body: Container(
@@ -324,14 +325,14 @@ class CreateRecipe extends HookWidget {
                       if (currRecipe.isEmpty) {
                         return Column(
                           mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            const Text(
+                          children: const [
+                            Text(
                               "Mohon Tambahkan Bahan Makanan",
                             ),
-                            const SizedBox(
+                            SizedBox(
                               height: 10,
                             ),
-                            const TambahBahanButton(),
+                            TambahBahanButton(),
                           ],
                         );
                       }
@@ -660,7 +661,7 @@ class StepsWidget extends HookConsumerWidget {
                 height: 80,
                 width: 120,
                 child: step.file != null
-                    ? Image.file(
+                    ? Image.memory(
                         step.file!,
                         fit: BoxFit.cover,
                       )
@@ -679,7 +680,29 @@ class StepsWidget extends HookConsumerWidget {
   }
 }
 
-Future<File?> pickImage({required ImageSource source}) async {
+Future<Uint8List?> pickImageWeb() async {
+  FilePickerResult? result = await FilePicker.platform.pickFiles();
+
+  if (result != null) {
+    final fileBytes = result.files.first.bytes;
+
+    return fileBytes;
+  }
+  return null;
+}
+
+Future<Uint8List?> pickImage({required ImageSource source}) async {
+  // final picker = ImagePicker();
+  // if (kIsWeb) {
+  //   XFile? image = await picker.pickImage(source: ImageSource.gallery);
+  //     if (image != null) {
+  //       var f = await image.readAsBytes();
+  //       setState(() {
+  //         _file = File("a");
+  //         webImage = f;
+  //       });
+  //   return webPicker == null ? null : File.fromRawPath(webPicker);
+  // }
   final picker = ImagePicker();
 
   final image = await picker.pickImage(source: source);
@@ -687,7 +710,7 @@ Future<File?> pickImage({required ImageSource source}) async {
     return null;
   }
 
-  return File(image.path);
+  return image.readAsBytes();
 }
 
 class AddIngredientToAll extends HookConsumerWidget {
