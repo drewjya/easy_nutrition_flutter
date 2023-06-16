@@ -7,6 +7,7 @@ import 'package:easy_nutrition/src/features/recipe/providers/ingredients_provide
 import 'package:easy_nutrition/src/features/recipe/providers/user_provider.dart';
 import 'package:easy_nutrition/src/features/recipe/view/pages/edit_recipe.dart';
 import 'package:easy_nutrition/src/src.dart';
+import 'package:file_picker/_internal/file_picker_web.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -681,7 +682,7 @@ class StepsWidget extends HookConsumerWidget {
 }
 
 Future<Uint8List?> pickImageWeb() async {
-  FilePickerResult? result = await FilePicker.platform.pickFiles();
+  FilePickerResult? result = await FilePickerWeb.platform.pickFiles();
 
   if (result != null) {
     final fileBytes = result.files.first.bytes;
